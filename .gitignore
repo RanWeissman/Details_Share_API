@@ -13,3 +13,6 @@ venv/
 
 # Local environment files
 .env
+
+# Local database
+ourDB.db
