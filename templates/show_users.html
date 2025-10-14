@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+      <meta charset="UTF-8">
+      <title>All Users</title>
+  </head>
+  <body>
+
+    <h2>All Users</h2>
+
+    {% if users and users|length > 0 %}
+    <table border="1" cellspacing="0" cellpadding="6">
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Date of Birth</th>
+        </tr>
+
+        {% for user in users %}
+        <tr>
+            <td>{{ user.id }}</td>
+            <td>{{ user.name }}</td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.date_of_birth }}</td>
+        </tr>
+        {% endfor %}
+
+    </table>
+    {% else %}
+    <p>No users found.</p>
+    {% endif %}
+
+    <br>
+    <a href="/">⬅ Back to Home Page</a>
+  </body>
+</html>

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Users Filter</title>
+</head>
+<body style="font-family:sans-serif; text-align:center; margin-top:40px;">
+    <h2>👥 Users Filter</h2>
+
+    {% if users %}
+        <table border="1" style="margin:auto; border-collapse:collapse;">
+            <tr style="background-color:#f0f0f0;">
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Date of Birth</th>
+            </tr>
+            {% for user in users %}
+                <tr>
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.name }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.date_of_birth }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p style="color:gray;">No users found for this filter.</p>
+    {% endif %}
+
+    <br>
+    <a href="/" style="text-decoration:none;">⬅ Back to Home</a>
+</body>
+</html>
