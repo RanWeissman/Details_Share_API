@@ -1,20 +1,34 @@
 
-from sqlmodel import SQLModel, create_engine, Session, select, func
+from sqlmodel import SQLModel, create_engine, Session, select
 
-from typing import Type, List, Optional, Dict
+from typing import Type, List, Optional
 
 from datetime import date
 
 
 class DatabaseLayer:
-    def __init__(self, db_url: str = "sqlite:///ourDB.db"):  # default SQLite
-        self.engine = create_engine(db_url)
-        SQLModel.metadata.create_all(self.engine)
+
+    _engine = None  # Static variable to hold the engine
+
+    def __init__(self, db_url: Optional[str] = None):
+        if DatabaseLayer._engine is None:
+            if not db_url:
+                db_url = "sqlite:///ourDB.db"  # default SQLite
+            DatabaseLayer._engine = create_engine(db_url)
+            SQLModel.metadata.create_all(DatabaseLayer._engine)
+        self.engine = DatabaseLayer._engine
+
 
     def get_session(self) -> Session:
         return Session(self.engine)
 
-    def add(self, obj: SQLModel):
+    def check_id_and_email(self, model: Type[SQLModel], id: int, email: str) -> bool:
+        with self.get_session() as session:
+            statement = select(model).where((model.id == id) | (model.email == email))
+            result = session.exec(statement).first()
+            return result is not None
+
+    def add(self, obj: SQLModel)-> SQLModel:
         with self.get_session() as session:
             session.add(obj)
             session.commit()
@@ -35,9 +49,6 @@ class DatabaseLayer:
             results = list(session.exec(select(model)).all())
             return results
 
-    def get_by_id(self, model: Type[SQLModel], obj_id: int) -> Optional[SQLModel]:
-        with self.get_session() as session:
-            return session.get(model, obj_id)
 
     def get_users_above_age(self, model: Type[SQLModel], age: int) -> List[SQLModel]:
         with self.get_session() as session:
