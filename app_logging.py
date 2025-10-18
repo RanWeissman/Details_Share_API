@@ -1,7 +1,7 @@
 import logging
 from logging.config import dictConfig
 
-def configure_logging(level: str = "INFO") -> None:
+def configure_logging(level: int = logging.INFO) -> None:
     dictConfig({
         "version": 1,
         "disable_existing_loggers": False,
