@@ -10,7 +10,6 @@ from fastapi.templating import Jinja2Templates
 from models.user import User
 from database.databselayer import DatabaseLayer
 
-
 app = FastAPI()
 
 templates = Jinja2Templates(directory="templates")
@@ -51,6 +50,7 @@ async def log_request_time(request: Request, call_next):
 def show_homepage():
     return FileResponse("templates/homepage.html")
 
+
 ####################################################################### CRUD Endpoints
 
 @app.get("/pages/users/create", response_class=FileResponse)
@@ -59,8 +59,9 @@ def create_user_page():
 
 
 @app.post("/api/users/create", response_class=HTMLResponse)
-def users_create(request: Request, name: str = Form(...), email: str = Form(...),id: int = Form(...), date_of_birth: date = Form(...), db: DatabaseLayer = Depends(get_db)):
-    existing_user =db.check_id_and_email(User, id, email)
+def users_create(request: Request, name: str = Form(...), email: str = Form(...), id: int = Form(...),
+                 date_of_birth: date = Form(...), db: DatabaseLayer = Depends(get_db)):
+    existing_user = db.check_id_and_email(User, id, email)
     if not existing_user:
         user = User(id=id, name=name, email=email, date_of_birth=date_of_birth)
         db.add(user)
@@ -110,6 +111,7 @@ def delete_user(request: Request, id: int = Form(...), db: DatabaseLayer = Depen
         {"request": request, "success": True, "id": id},
     )
 
+
 ####################################################################### All Users Endpoints
 
 @app.get("/pages/users/all", response_class=HTMLResponse)
@@ -126,6 +128,7 @@ def get_users_json(db: DatabaseLayer = Depends(get_db)):
     users_data = [{"id": u.id, "name": u.name, "email": u.email,
                    "date_of_birth": u.date_of_birth.isoformat()} for u in users]
     return JSONResponse(content=users_data)
+
 
 ####################################################################### Filtering Endpoints
 
@@ -155,12 +158,14 @@ def users_between_page():
 
 
 @app.post("/api/filters/age/between", response_class=HTMLResponse)
-def users_between_show(request: Request, min_age: int = Form(...), max_age: int = Form(...), db: DatabaseLayer = Depends(get_db)):
+def users_between_show(request: Request, min_age: int = Form(...), max_age: int = Form(...),
+                       db: DatabaseLayer = Depends(get_db)):
     users = db.get_users_between_age(User, min_age, max_age)
     return templates.TemplateResponse(
         "filters/users_filter_result.html",
         {"request": request, "min_age": min_age, "max_age": max_age, "users": users},
     )
+
 
 ####################################################################### Debugging Endpoints
 
@@ -171,6 +176,7 @@ def debug_routes():
         if isinstance(r, APIRoute):
             lines.append(f"{sorted(r.methods)}  {r.path}  -> {r.endpoint.__name__}")
     return "<br>".join(lines)
+
 
 @app.post("/request/name", response_class=HTMLResponse)
 async def debug_function(request: Request):
