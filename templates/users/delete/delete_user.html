@@ -19,9 +19,9 @@
 
     <h2>Please enter your ID:</h2>
 
-    <form action="/api/users/delete" method="post">
-        <label>Enter User ID:</label><br>
-        <input type="number" id="id" name="id" placeholder="Your id" required>
+    <form action="{{ request.url_for('api_users_delete') }}" method="post">
+        <label for="id">Enter User ID</label><br>
+        <input id="id" type="number" name="id" placeholder="Your id" min="0" required>
         <br><br>
         <button type="submit">Submit</button>
     </form>

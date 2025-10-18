@@ -4,7 +4,7 @@ from typing import Generator
 
 from fastapi import FastAPI, Request, Form, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.routing import APIRoute
 from fastapi.templating import Jinja2Templates
 from sqlmodel import Session
@@ -59,18 +59,26 @@ async def log_request_time(
 ####################################################################### Home Page Endpoint
 
 @app.get("/")
-def show_homepage() -> FileResponse:
-    return FileResponse("templates/homepage.html")
-
+def show_homepage(
+        request: Request,
+) -> Response:
+    return templates.TemplateResponse(
+        "homepage.html",
+        {"request": request}
+    )
 
 ####################################################################### CRUD Endpoints
 
-@app.get("/pages/users/create")
-def create_user_page() -> FileResponse:
-    return FileResponse("templates/users/add/user_add.html")
+
+@app.get("/pages/users/create", name="users_create_page")
+def create_user_page(request: Request):
+    return templates.TemplateResponse(
+        "users/add/user_add.html",
+        {"request": request}
+    )
 
 
-@app.post("/api/users/create")
+@app.post("/api/users/create", name="api_users_create")
 def users_create(
         request: Request,
         name: str = Form(...),
@@ -108,11 +116,17 @@ def users_create(
     )
 
 
-@app.get("/pages/users/delete")
-def delete_user_page() -> FileResponse:
-    return FileResponse("templates/users/delete/delete_user.html")
+@app.get("/pages/users/delete", name="users_delete_page")
+def delete_user_page(
+        request: Request
+) -> Response:
+    return templates.TemplateResponse(
+        "users/delete/delete_user.html",
+        {"request": request},
+        status_code=status.HTTP_200_OK,
+    )
 
-@app.post("/api/users/delete")
+@app.post("/api/users/delete", name="api_users_delete")
 def delete_user(
     request: Request,
     id: int = Form(...),
@@ -141,18 +155,19 @@ def delete_user(
 ####################################################################### Show All Users Endpoints
 
 
-@app.get("/pages/users/all")
+@app.get("/pages/users/all", name="api_users_show_all")
 def get_all_users(
         request: Request,
         session: Session = Depends(get_session)
 ) -> Response:
     users = user_db.get_all(session, User)
     return templates.TemplateResponse(
-        "users/show_users.html", {"request": request, "users": users}
+        "users/show_users.html",
+        {"request": request, "users": users}
     )
 
 
-@app.get("/api/users/all")
+@app.get("/api/users/all", name="json_users_show_all")
 def get_users_json(
         session: Session = Depends(get_session)
 ) -> JSONResponse:
@@ -172,22 +187,39 @@ def get_users_json(
 ####################################################################### Filtering Endpoints
 
 
-@app.get("/pages/filters/menu")
-def filter_page() -> FileResponse:
-    return FileResponse("templates/filters/users_filter_page.html")
+@app.get("/pages/filters/menu", name="filters_menu_page")
+def filter_page(
+        request: Request,
+) -> Response:
+    return templates.TemplateResponse(
+        "filters/users_filter_page.html",
+        {"request": request},
+        status_code=status.HTTP_200_OK,
+    )
 
 
-@app.get("/pages/filters/age/above")
-def users_above_page() -> FileResponse:
-    return FileResponse("templates/filters/filter_users_age_above.html")
 
+@app.get("/pages/filters/age/above", name="filter_age_above_page")
+def users_above_page(
+        request: Request,
+) -> Response:
+    return templates.TemplateResponse(
+        "filters/filter_users_age_above.html",
+        {"request": request},
+        status_code=status.HTTP_200_OK,
+    )
 
-@app.get("/pages/filters/age/between")
-def users_between_page() -> FileResponse:
-    return FileResponse("templates/filters/filter_users_age_between.html")
+@app.get("/pages/filters/age/between", name="filter_age_between_page")
+def users_between_page(
+        request: Request,
+) -> Response:
+    return templates.TemplateResponse(
+        "filters/filter_users_age_between.html",
+        {"request": request},
+        status_code=status.HTTP_200_OK,
+    )
 
-
-@app.post("/api/filters/age/above")
+@app.post("/api/filters/age/above", name="api_age_above")
 def users_above_show(
         request: Request,
         age: int = Form(...),
@@ -200,7 +232,7 @@ def users_above_show(
     )
 
 
-@app.post("/api/filters/age/between")
+@app.post("/api/filters/age/between", name="api_age_between")
 def users_between_show(
         request: Request,
         min_age: int = Form(...),

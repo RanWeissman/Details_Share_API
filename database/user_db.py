@@ -1,6 +1,6 @@
 
 # repositories/user_repository.py
-from typing import Type, List, Optional
+from typing import Type, List
 from datetime import date
 from sqlmodel import Session, select, SQLModel
 
