@@ -9,6 +9,9 @@ from fastapi.routing import APIRoute
 from fastapi.templating import Jinja2Templates
 from sqlmodel import Session
 
+from starlette.responses import Response
+from starlette.middleware.base import RequestResponseEndpoint
+
 from models.user import User
 from database.databselayer import DatabaseLayer
 import database.user_db as user_db
@@ -39,7 +42,10 @@ def get_session() -> Generator[Session, None, None]:
 
 
 @app.middleware("http")
-async def log_request_time(request: Request, call_next):
+async def log_request_time(
+        request: Request,
+        call_next: RequestResponseEndpoint
+) -> Response:
     start_time = time.time()
     response = await call_next(request)
     process_time = time.time() - start_time
@@ -50,19 +56,19 @@ async def log_request_time(request: Request, call_next):
 
 ####################################################################### Home Page Endpoint
 
-@app.get("/", response_class=FileResponse)
-def show_homepage():
+@app.get("/")
+def show_homepage() -> FileResponse:
     return FileResponse("templates/homepage.html")
 
 
 ####################################################################### CRUD Endpoints
 
-@app.get("/pages/users/create", response_class=FileResponse)
-def create_user_page():
+@app.get("/pages/users/create")
+def create_user_page() -> FileResponse:
     return FileResponse("templates/users/add/user_add.html")
 
 
-@app.post("/api/users/create", response_class=HTMLResponse)
+@app.post("/api/users/create")
 def users_create(
         request: Request,
         name: str = Form(...),
@@ -70,7 +76,7 @@ def users_create(
         id: int = Form(...),
         date_of_birth: date = Form(...),
         session: Session = Depends(get_session)
-):
+) -> Response:
 
     if not user_db.check_id_and_email(session,User, id, email): # if not exists
         user = User(id=id, name=name, email=email, date_of_birth=date_of_birth)
@@ -108,17 +114,17 @@ def users_create(
         )
 
 
-@app.get("/pages/users/delete", response_class=FileResponse)
-def delete_user_page():
+@app.get("/pages/users/delete")
+def delete_user_page() -> FileResponse:
     return FileResponse("templates/users/delete/delete_user.html")
 
 
-@app.post("/api/users/delete", response_class=HTMLResponse)
+@app.post("/api/users/delete")
 def delete_user(
         request: Request,
         id: int = Form(...),
         session: Session = Depends(get_session),
-):
+)-> Response:
     try:
         ok = user_db.delete(session, User, id)
         if not ok:
@@ -142,11 +148,11 @@ def delete_user(
 ####################################################################### Show All Users Endpoints
 
 
-@app.get("/pages/users/all", response_class=HTMLResponse)
+@app.get("/pages/users/all")
 def get_all_users(
         request: Request,
-        session:
-        Session = Depends(get_session)):
+        session:Session = Depends(get_session)
+)-> Response:
     users = user_db.get_all(session, User)
     return templates.TemplateResponse(
         "users/show_users.html", {"request": request, "users": users}
@@ -154,7 +160,9 @@ def get_all_users(
 
 
 @app.get("/api/users/all")
-def get_users_json(session: Session = Depends(get_session)):
+def get_users_json(
+        session: Session = Depends(get_session)
+)-> JSONResponse:
     users = user_db.get_all(session, User)
     users_data = [
         {
@@ -170,27 +178,27 @@ def get_users_json(session: Session = Depends(get_session)):
 ####################################################################### Filtering Endpoints
 
 
-@app.get("/pages/filters/menu", response_class=FileResponse)
-def filter_page():
+@app.get("/pages/filters/menu")
+def filter_page()-> FileResponse:
     return FileResponse("templates/filters/users_filter_page.html")
 
 
-@app.get("/pages/filters/age/above", response_class=FileResponse)
-def users_above_page():
+@app.get("/pages/filters/age/above")
+def users_above_page()-> FileResponse:
     return FileResponse("templates/filters/filter_users_age_above.html")
 
 
-@app.get("/pages/filters/age/between", response_class=FileResponse)
-def users_between_page():
+@app.get("/pages/filters/age/between")
+def users_between_page()-> FileResponse:
     return FileResponse("templates/filters/filter_users_age_between.html")
 
 
-@app.post("/api/filters/age/above", response_class=HTMLResponse)
+@app.post("/api/filters/age/above")
 def users_above_show(
     request: Request,
     age: int = Form(...),
     session: Session = Depends(get_session),
-):
+)-> Response:
     users = user_db.get_users_above_age(session, User, age)
     return templates.TemplateResponse(
         "filters/users_filter_result.html",
@@ -198,13 +206,13 @@ def users_above_show(
     )
 
 
-@app.post("/api/filters/age/between", response_class=HTMLResponse)
+@app.post("/api/filters/age/between")
 def users_between_show(
     request: Request,
     min_age: int = Form(...),
     max_age: int = Form(...),
     session: Session = Depends(get_session),
-):
+) -> Response:
     users = user_db.get_users_between_age(session, User, min_age, max_age)
     return templates.TemplateResponse(
         "filters/users_filter_result.html",
@@ -214,17 +222,20 @@ def users_between_show(
 
 ####################################################################### Debugging Endpoints
 
-@app.get("/api/debug/routes", response_class=HTMLResponse)
-def debug_routes():
+@app.get("/api/debug/routes")
+def debug_routes()-> HTMLResponse:
     lines = []
     for r in app.routes:
         if isinstance(r, APIRoute):
             lines.append(f"{sorted(r.methods)}  {r.path}  -> {r.endpoint.__name__}")
-    return "<br>".join(lines)
+    html = "<br>".join(lines)
+    return HTMLResponse(content=html)
 
 
-@app.post("/request/name", response_class=HTMLResponse)
-async def debug_function(request: Request):
+@app.post("/request/name")
+async def debug_function(
+        request: Request
+) -> HTMLResponse:
     raw = await request.body()
     print("RAW BODY:", raw)
     print("HEADERS:", request.headers)
