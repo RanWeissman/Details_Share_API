@@ -15,6 +15,7 @@ from starlette.middleware.base import RequestResponseEndpoint
 from models.user import User
 from database.databselayer import DatabaseLayer
 import database.user_db as user_db
+import logging
 
 app = FastAPI()
 
@@ -33,6 +34,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    force=True,
+)
+logger = logging.getLogger("app")
 
 def get_session() -> Generator[Session, None, None]:
     session = DatabaseLayer().get_session()
@@ -51,7 +59,7 @@ async def log_request_time(
     response = await call_next(request)
     process_time = time.time() - start_time
     formatted_time = f"{process_time:.4f} sec"
-    print(f"//////////////////////////////// {request.method} {request.url.path} took {formatted_time}")
+    logger.info("%s %s took %s", request.method, request.url.path, formatted_time)
     response.headers["X-Process-Time"] = formatted_time
     return response
 
@@ -263,6 +271,6 @@ async def debug_function(
         request: Request
 ) -> HTMLResponse:
     raw = await request.body()
-    print("RAW BODY:", raw)
-    print("HEADERS:", request.headers)
+    logger.info("RAW BODY: %r", raw)
+    logger.info("HEADERS: %r", request.headers)
     return HTMLResponse("debug")
