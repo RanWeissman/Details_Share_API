@@ -1,4 +1,3 @@
-from fastapi import FastAPI
 from sqlmodel import SQLModel, Session, create_engine
 from sqlalchemy.orm import sessionmaker
 
