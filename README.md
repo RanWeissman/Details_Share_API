@@ -33,7 +33,8 @@ Web_excercise2_db/
 ---
 ## Install dependencies**
 ```bash
-pip install fastapi uvicorn sqlmodel jinja2 python-multipart
+pip pip install -r requirements.txt
+
 ```
 
 ## Run the app 
