@@ -12,8 +12,8 @@ from starlette.middleware.base import RequestResponseEndpoint
 from starlette.responses import Response
 
 from app_logging import configure_logging, get_logger
-from database.databselayer import DatabaseLayer
-import database.user_db as user_db
+from database.db_core import SessionLocal
+from database.user_repository import UsersRepository
 from models.user import User
 
 ####################################################################### FastAPI App Initialization
@@ -36,11 +36,15 @@ configure_logging()
 logger = get_logger("app.main")
 ####################################################################### Database Session Dependency
 def get_session() -> Generator[Session, None, None]:
-    session = DatabaseLayer().get_session()
+    s = SessionLocal()
     try:
-        yield session
+        yield s
+        s.commit()
+    except Exception:
+        s.rollback()
+        raise
     finally:
-        session.close()
+        s.close()
 ####################################################################### Middleware to Log Request Processing Time
 @app.middleware("http")
 async def log_request_time(
@@ -85,16 +89,13 @@ def users_create(
 ) -> Response:
     error = f"User with this ID or Email already exists!"
     status_code = status.HTTP_400_BAD_REQUEST
-    if not user_db.check_id_and_email(session, User, id, email):  # if not exists
-        user = User(id=id, name=name, email=email, date_of_birth=date_of_birth)
-        try:
-            user_db.add(session, user)
-            session.commit()
-            session.refresh(user)
-        except Exception:
-            session.rollback()
-            raise
+    user_repo = UsersRepository(session)
 
+    if not user_repo.check_id_and_email(User, id, email):  # if not exists
+        user = User(id=id, name=name, email=email, date_of_birth=date_of_birth)
+        # add user to DB
+        user_repo.add(user)
+        #
         error = None
         status_code = status.HTTP_201_CREATED
 
@@ -127,18 +128,11 @@ def delete_user(
     id: int = Form(...),
     session: Session = Depends(get_session),
 ) -> Response:
-    try:
-        ok = user_db.delete(session, User, id)
-        if ok:
-            session.commit()
-            success = True
-            status_code = status.HTTP_200_OK
-        else:
-            success = False
-            status_code = status.HTTP_404_NOT_FOUND
-    except Exception:
-        session.rollback()
-        raise
+    user_repo = UsersRepository(session)
+    # delete user from DB
+    success = user_repo.delete_by_id(User, id)
+    #
+    status_code = status.HTTP_200_OK if success else status.HTTP_404_NOT_FOUND
 
     return templates.TemplateResponse(
         "users/delete/delete_result.html",
@@ -153,7 +147,10 @@ def get_all_users(
         request: Request,
         session: Session = Depends(get_session)
 ) -> Response:
-    users = user_db.get_all(session, User)
+    user_repo = UsersRepository(session)
+    # get all users from DB
+    users = user_repo.get_all(User)
+    #
     return templates.TemplateResponse(
         "users/show_users.html",
         {"request": request, "users": users}
@@ -163,7 +160,10 @@ def get_all_users(
 def get_users_json(
         session: Session = Depends(get_session)
 ) -> JSONResponse:
-    users = user_db.get_all(session, User)
+    user_repo = UsersRepository(session)
+    # get all users from DB
+    users = user_repo.get_all(User)
+    #
     users_data = [
         {
             "id": u.id,
@@ -213,7 +213,10 @@ def users_above_show(
         age: int = Form(...),
         session: Session = Depends(get_session),
 ) -> Response:
-    users = user_db.get_users_above_age(session, User, age)
+    user_repo = UsersRepository(session)
+    # get users above age from DB
+    users = user_repo.get_users_above_age(User, age)
+    #
     return templates.TemplateResponse(
         "filters/users_filter_result.html",
         {"request": request, "age": age, "users": users},
@@ -226,7 +229,10 @@ def users_between_show(
         max_age: int = Form(...),
         session: Session = Depends(get_session),
 ) -> Response:
-    users = user_db.get_users_between_age(session, User, min_age, max_age)
+    user_repo = UsersRepository(session)
+    # get users between ages from DB
+    users = user_repo.get_users_between_age(User, min_age, max_age)
+    #
     return templates.TemplateResponse(
         "filters/users_filter_result.html",
         {"request": request, "min_age": min_age, "max_age": max_age, "users": users},
