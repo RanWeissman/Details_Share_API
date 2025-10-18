@@ -36,9 +36,9 @@ class UsersRepository:
         self, model: Type[SQLModel], min_age: int, max_age: int
     ) -> List[SQLModel]:
         today = date.today()
-        max_birth = _years_ago(date.today(), min_age)
+        max_birth = _years_ago(today, min_age)
 
-        min_birth = _years_ago(date.today(), max_age)
+        min_birth = _years_ago(today, max_age)
 
         stmt = select(model).where(
             (model.date_of_birth >= min_birth) & (model.date_of_birth <= max_birth)

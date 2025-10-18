@@ -262,11 +262,3 @@ def debug_routes() -> HTMLResponse:
     html = "<br>".join(lines)
     return HTMLResponse(content=html)
 
-@app.post("/request/name")
-async def debug_function(
-        request: Request
-) -> HTMLResponse:
-    raw = await request.body()
-    logger.info("RAW BODY: %r", raw)
-    logger.info("HEADERS: %r", request.headers)
-    return HTMLResponse("debug")
