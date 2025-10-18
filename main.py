@@ -59,7 +59,8 @@ def get_session() -> Generator[Session, None, None]:
         raise
     finally:
         s.close()
-        ################################### Middleware to Log Request Processing Time
+
+####################################################################### Middleware to Log Request Processing Time
 @app.middleware("http")
 async def log_request_time(
         request: Request,
@@ -104,9 +105,9 @@ def users_create(
     error = f"User with this ID or Email already exists!"
     status_code = status.HTTP_400_BAD_REQUEST
     user_repo = UsersRepository(session)
-
+    email_norm = email.strip().casefold()
     if not user_repo.check_id_and_email(User, id, email):  # if not exists
-        user = User(id=id, name=name, email=email, date_of_birth=date_of_birth)
+        user = User(id=id, name=name, email=email_norm, date_of_birth=date_of_birth)
         # add user to DB
         user_repo.add(user)
         #
