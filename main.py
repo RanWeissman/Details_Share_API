@@ -1,4 +1,3 @@
-import logging
 import time
 from datetime import date
 from typing import Generator
@@ -12,6 +11,7 @@ from sqlmodel import Session
 from starlette.middleware.base import RequestResponseEndpoint
 from starlette.responses import Response
 
+from app_logging import configure_logging, get_logger
 from database.databselayer import DatabaseLayer
 import database.user_db as user_db
 from models.user import User
@@ -32,13 +32,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 ####################################################################### Logging Configuration
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-    force=True,
-)
-logger = logging.getLogger("app")  # Application logger Application
+configure_logging()
+logger = get_logger("app.main")
 ####################################################################### Database Session Dependency
 def get_session() -> Generator[Session, None, None]:
     session = DatabaseLayer().get_session()

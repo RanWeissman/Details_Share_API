@@ -6,9 +6,10 @@
 Matches your current layout:
 
 ```
-Web_excercise2_db/
+Web_Project_db/
 ├─ database/
-│  └─ databselayer.py
+│  ├─ databselayer.py
+│  └─ user_db.py
 ├─ models/
 │  └─ user.py
 ├─ templates/
@@ -21,13 +22,16 @@ Web_excercise2_db/
 │  │  ├─ add/
 │  │  │  ├─ user_add.html
 │  │  │  └─ user_add_result.html
-│  │  └─ delete/
-│  │     ├─ delete_result.html
-│  │     └─ delete_user.html
+│  │  ├─ delete/
+│  │  │  ├─ delete_result.html
+│  │  │  └─ delete_user.html
+│  │  └─ show_users.html
 │  └─ homepage.html
 ├─ .gitignore
+├─ app_logging.py
 ├─ main.py
-└─ README.md
+├─ README.md
+└─ requirements.txt
 ```
 
 ---
