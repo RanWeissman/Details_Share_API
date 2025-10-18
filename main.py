@@ -33,6 +33,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 def get_session() -> Generator[Session, None, None]:
     session = DatabaseLayer().get_session()
     try:
@@ -53,6 +54,7 @@ async def log_request_time(
     print(f"//////////////////////////////// {request.method} {request.url.path} took {formatted_time}")
     response.headers["X-Process-Time"] = formatted_time
     return response
+
 
 ####################################################################### Home Page Endpoint
 
@@ -77,8 +79,9 @@ def users_create(
         date_of_birth: date = Form(...),
         session: Session = Depends(get_session)
 ) -> Response:
-
-    if not user_db.check_id_and_email(session,User, id, email): # if not exists
+    error = f"User with this ID or Email already exists!"
+    status_code = status.HTTP_400_BAD_REQUEST
+    if not user_db.check_id_and_email(session, User, id, email):  # if not exists
         user = User(id=id, name=name, email=email, date_of_birth=date_of_birth)
         try:
             user_db.add(session, user)
@@ -88,62 +91,52 @@ def users_create(
             session.rollback()
             raise
 
-        return templates.TemplateResponse(
-            "users/add/user_add_result.html",
-            {
-                "request": request,
-                "name": user.name,
-                "email": user.email,
-                "id": user.id,
-                "date_of_birth": user.date_of_birth,
-            },
-            status_code=status.HTTP_201_CREATED,
-        )
-    else:
-        return templates.TemplateResponse(
-            "users/add/user_add_result.html",
-            {
-                "request": request,
-                "error": f"User with this ID or Email already exists!",
-                "name": name,
-                "email": email,
-                "id": id,
-                "date_of_birth": date_of_birth,
-            },
-            status_code=status.HTTP_400_BAD_REQUEST,
-        )
+        error = None
+        status_code = status.HTTP_201_CREATED
+
+    return templates.TemplateResponse(
+        "users/add/user_add_result.html",
+        {
+            "request": request,
+            "error": error,
+            "name": name,
+            "email": email,
+            "id": id,
+            "date_of_birth": date_of_birth,
+        },
+        status_code=status_code,
+    )
 
 
 @app.get("/pages/users/delete")
 def delete_user_page() -> FileResponse:
     return FileResponse("templates/users/delete/delete_user.html")
 
-
 @app.post("/api/users/delete")
 def delete_user(
-        request: Request,
-        id: int = Form(...),
-        session: Session = Depends(get_session),
-)-> Response:
+    request: Request,
+    id: int = Form(...),
+    session: Session = Depends(get_session),
+) -> Response:
     try:
         ok = user_db.delete(session, User, id)
-        if not ok:
-            return templates.TemplateResponse(
-                "users/delete/delete_result.html",
-                {"request": request, "success": False, "id": id},
-                status_code=status.HTTP_404_NOT_FOUND,
-            )
-
-        session.commit()
+        if ok:
+            session.commit()
+            success = True
+            status_code = status.HTTP_200_OK
+        else:
+            success = False
+            status_code = status.HTTP_404_NOT_FOUND
     except Exception:
         session.rollback()
         raise
 
     return templates.TemplateResponse(
         "users/delete/delete_result.html",
-        {"request": request, "success": True, "id": id},
-        status_code=status.HTTP_200_OK,
+        {"request": request,"success": success, "id": id},
+        status_code=status_code,
     )
+
 
 ####################################################################### Show All Users Endpoints
 
@@ -151,8 +144,8 @@ def delete_user(
 @app.get("/pages/users/all")
 def get_all_users(
         request: Request,
-        session:Session = Depends(get_session)
-)-> Response:
+        session: Session = Depends(get_session)
+) -> Response:
     users = user_db.get_all(session, User)
     return templates.TemplateResponse(
         "users/show_users.html", {"request": request, "users": users}
@@ -162,7 +155,7 @@ def get_all_users(
 @app.get("/api/users/all")
 def get_users_json(
         session: Session = Depends(get_session)
-)-> JSONResponse:
+) -> JSONResponse:
     users = user_db.get_all(session, User)
     users_data = [
         {
@@ -175,30 +168,31 @@ def get_users_json(
     ]
     return JSONResponse(content=users_data)
 
+
 ####################################################################### Filtering Endpoints
 
 
 @app.get("/pages/filters/menu")
-def filter_page()-> FileResponse:
+def filter_page() -> FileResponse:
     return FileResponse("templates/filters/users_filter_page.html")
 
 
 @app.get("/pages/filters/age/above")
-def users_above_page()-> FileResponse:
+def users_above_page() -> FileResponse:
     return FileResponse("templates/filters/filter_users_age_above.html")
 
 
 @app.get("/pages/filters/age/between")
-def users_between_page()-> FileResponse:
+def users_between_page() -> FileResponse:
     return FileResponse("templates/filters/filter_users_age_between.html")
 
 
 @app.post("/api/filters/age/above")
 def users_above_show(
-    request: Request,
-    age: int = Form(...),
-    session: Session = Depends(get_session),
-)-> Response:
+        request: Request,
+        age: int = Form(...),
+        session: Session = Depends(get_session),
+) -> Response:
     users = user_db.get_users_above_age(session, User, age)
     return templates.TemplateResponse(
         "filters/users_filter_result.html",
@@ -208,10 +202,10 @@ def users_above_show(
 
 @app.post("/api/filters/age/between")
 def users_between_show(
-    request: Request,
-    min_age: int = Form(...),
-    max_age: int = Form(...),
-    session: Session = Depends(get_session),
+        request: Request,
+        min_age: int = Form(...),
+        max_age: int = Form(...),
+        session: Session = Depends(get_session),
 ) -> Response:
     users = user_db.get_users_between_age(session, User, min_age, max_age)
     return templates.TemplateResponse(
@@ -223,7 +217,7 @@ def users_between_show(
 ####################################################################### Debugging Endpoints
 
 @app.get("/api/debug/routes")
-def debug_routes()-> HTMLResponse:
+def debug_routes() -> HTMLResponse:
     lines = []
     for r in app.routes:
         if isinstance(r, APIRoute):
