@@ -1,55 +1,52 @@
+import logging
 import time
 from datetime import date
 from typing import Generator
 
-from fastapi import FastAPI, Request, Form, Depends, status
+from fastapi import Depends, FastAPI, Form, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.routing import APIRoute
 from fastapi.templating import Jinja2Templates
 from sqlmodel import Session
-
-from starlette.responses import Response
 from starlette.middleware.base import RequestResponseEndpoint
+from starlette.responses import Response
 
-from models.user import User
 from database.databselayer import DatabaseLayer
 import database.user_db as user_db
-import logging
+from models.user import User
 
+####################################################################### FastAPI App Initialization
 app = FastAPI()
-
+####################################################################### Jinja2 Templates Setup
 templates = Jinja2Templates(directory="templates")
-
-origins = [
-    "http://localhost:3000",
-    "https://myfrontend.com",
-]
-
+####################################################################### CORS Middleware Setup
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=[
+    "http://localhost:3000",
+    "https://myfrontend.com",
+],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
+####################################################################### Logging Configuration
 logging.basicConfig(
     level=logging.DEBUG,
     format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
     force=True,
 )
-logger = logging.getLogger("app")
-
+logger = logging.getLogger("app")  # Application logger Application
+####################################################################### Database Session Dependency
 def get_session() -> Generator[Session, None, None]:
     session = DatabaseLayer().get_session()
     try:
         yield session
     finally:
         session.close()
-
-
+####################################################################### Middleware to Log Request Processing Time
 @app.middleware("http")
 async def log_request_time(
         request: Request,
@@ -62,8 +59,6 @@ async def log_request_time(
     logger.info("%s %s took %s", request.method, request.url.path, formatted_time)
     response.headers["X-Process-Time"] = formatted_time
     return response
-
-
 ####################################################################### Home Page Endpoint
 
 @app.get("/")
@@ -77,14 +72,12 @@ def show_homepage(
 
 ####################################################################### CRUD Endpoints
 
-
 @app.get("/pages/users/create", name="users_create_page")
 def create_user_page(request: Request):
     return templates.TemplateResponse(
         "users/add/user_add.html",
         {"request": request}
     )
-
 
 @app.post("/api/users/create", name="api_users_create")
 def users_create(
@@ -123,7 +116,6 @@ def users_create(
         status_code=status_code,
     )
 
-
 @app.get("/pages/users/delete", name="users_delete_page")
 def delete_user_page(
         request: Request
@@ -159,9 +151,7 @@ def delete_user(
         status_code=status_code,
     )
 
-
 ####################################################################### Show All Users Endpoints
-
 
 @app.get("/pages/users/all", name="api_users_show_all")
 def get_all_users(
@@ -173,7 +163,6 @@ def get_all_users(
         "users/show_users.html",
         {"request": request, "users": users}
     )
-
 
 @app.get("/api/users/all", name="json_users_show_all")
 def get_users_json(
@@ -191,9 +180,7 @@ def get_users_json(
     ]
     return JSONResponse(content=users_data)
 
-
 ####################################################################### Filtering Endpoints
-
 
 @app.get("/pages/filters/menu", name="filters_menu_page")
 def filter_page(
@@ -204,8 +191,6 @@ def filter_page(
         {"request": request},
         status_code=status.HTTP_200_OK,
     )
-
-
 
 @app.get("/pages/filters/age/above", name="filter_age_above_page")
 def users_above_page(
@@ -239,7 +224,6 @@ def users_above_show(
         {"request": request, "age": age, "users": users},
     )
 
-
 @app.post("/api/filters/age/between", name="api_age_between")
 def users_between_show(
         request: Request,
@@ -253,7 +237,6 @@ def users_between_show(
         {"request": request, "min_age": min_age, "max_age": max_age, "users": users},
     )
 
-
 ####################################################################### Debugging Endpoints
 
 @app.get("/api/debug/routes")
@@ -264,7 +247,6 @@ def debug_routes() -> HTMLResponse:
             lines.append(f"{sorted(r.methods)}  {r.path}  -> {r.endpoint.__name__}")
     html = "<br>".join(lines)
     return HTMLResponse(content=html)
-
 
 @app.post("/request/name")
 async def debug_function(
