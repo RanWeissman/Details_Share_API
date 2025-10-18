@@ -1,14 +1,17 @@
 import time
 from datetime import date
+from typing import Generator
 
-from fastapi import FastAPI, Request, Form, Depends
+from fastapi import FastAPI, Request, Form, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.routing import APIRoute
 from fastapi.templating import Jinja2Templates
+from sqlmodel import Session
 
 from models.user import User
 from database.databselayer import DatabaseLayer
+import database.user_db as user_db
 
 app = FastAPI()
 
@@ -27,12 +30,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-def get_db():
-    db_main = DatabaseLayer()
+def get_session() -> Generator[Session, None, None]:
+    session = DatabaseLayer().get_session()
     try:
-        yield db_main
+        yield session
     finally:
-        pass
+        session.close()
 
 
 @app.middleware("http")
@@ -41,10 +44,11 @@ async def log_request_time(request: Request, call_next):
     response = await call_next(request)
     process_time = time.time() - start_time
     formatted_time = f"{process_time:.4f} sec"
-    print(f"⏱//////////////////////////////// {request.method} {request.url.path} took {formatted_time}")
+    print(f"//////////////////////////////// {request.method} {request.url.path} took {formatted_time}")
     response.headers["X-Process-Time"] = formatted_time
     return response
 
+####################################################################### Home Page Endpoint
 
 @app.get("/", response_class=FileResponse)
 def show_homepage():
@@ -59,12 +63,25 @@ def create_user_page():
 
 
 @app.post("/api/users/create", response_class=HTMLResponse)
-def users_create(request: Request, name: str = Form(...), email: str = Form(...), id: int = Form(...),
-                 date_of_birth: date = Form(...), db: DatabaseLayer = Depends(get_db)):
-    existing_user = db.check_id_and_email(User, id, email)
-    if not existing_user:
+def users_create(
+        request: Request,
+        name: str = Form(...),
+        email: str = Form(...),
+        id: int = Form(...),
+        date_of_birth: date = Form(...),
+        session: Session = Depends(get_session)
+):
+
+    if not user_db.check_id_and_email(session,User, id, email): # if not exists
         user = User(id=id, name=name, email=email, date_of_birth=date_of_birth)
-        db.add(user)
+        try:
+            user_db.add(session, user)
+            session.commit()
+            session.refresh(user)
+        except Exception:
+            session.rollback()
+            raise
+
         return templates.TemplateResponse(
             "users/add/user_add_result.html",
             {
@@ -73,8 +90,8 @@ def users_create(request: Request, name: str = Form(...), email: str = Form(...)
                 "email": user.email,
                 "id": user.id,
                 "date_of_birth": user.date_of_birth,
-
-            }
+            },
+            status_code=status.HTTP_201_CREATED,
         )
     else:
         return templates.TemplateResponse(
@@ -87,7 +104,7 @@ def users_create(request: Request, name: str = Form(...), email: str = Form(...)
                 "id": id,
                 "date_of_birth": date_of_birth,
             },
-            status_code=400
+            status_code=status.HTTP_400_BAD_REQUEST,
         )
 
 
@@ -97,38 +114,58 @@ def delete_user_page():
 
 
 @app.post("/api/users/delete", response_class=HTMLResponse)
-def delete_user(request: Request, id: int = Form(...), db: DatabaseLayer = Depends(get_db)):
-    success = db.delete(User, id)
+def delete_user(
+        request: Request,
+        id: int = Form(...),
+        session: Session = Depends(get_session),
+):
+    try:
+        ok = user_db.delete(session, User, id)
+        if not ok:
+            return templates.TemplateResponse(
+                "users/delete/delete_result.html",
+                {"request": request, "success": False, "id": id},
+                status_code=status.HTTP_404_NOT_FOUND,
+            )
 
-    if not success:
-        return templates.TemplateResponse(
-            "users/delete/delete_result.html",
-            {"request": request, "success": False, "id": id},
-        )
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
 
     return templates.TemplateResponse(
         "users/delete/delete_result.html",
         {"request": request, "success": True, "id": id},
+        status_code=status.HTTP_200_OK,
     )
 
+####################################################################### Show All Users Endpoints
 
-####################################################################### All Users Endpoints
 
 @app.get("/pages/users/all", response_class=HTMLResponse)
-def get_all_users(request: Request, db: DatabaseLayer = Depends(get_db)):
-    users = db.get_all(User)
+def get_all_users(
+        request: Request,
+        session:
+        Session = Depends(get_session)):
+    users = user_db.get_all(session, User)
     return templates.TemplateResponse(
         "users/show_users.html", {"request": request, "users": users}
     )
 
 
 @app.get("/api/users/all")
-def get_users_json(db: DatabaseLayer = Depends(get_db)):
-    users = db.get_all(User)
-    users_data = [{"id": u.id, "name": u.name, "email": u.email,
-                   "date_of_birth": u.date_of_birth.isoformat()} for u in users]
+def get_users_json(session: Session = Depends(get_session)):
+    users = user_db.get_all(session, User)
+    users_data = [
+        {
+            "id": u.id,
+            "name": u.name,
+            "email": u.email,
+            "date_of_birth": u.date_of_birth.isoformat(),
+        }
+        for u in users
+    ]
     return JSONResponse(content=users_data)
-
 
 ####################################################################### Filtering Endpoints
 
@@ -143,24 +180,32 @@ def users_above_page():
     return FileResponse("templates/filters/filter_users_age_above.html")
 
 
+@app.get("/pages/filters/age/between", response_class=FileResponse)
+def users_between_page():
+    return FileResponse("templates/filters/filter_users_age_between.html")
+
+
 @app.post("/api/filters/age/above", response_class=HTMLResponse)
-def users_above_show(request: Request, age: int = Form(...), db: DatabaseLayer = Depends(get_db)):
-    users = db.get_users_above_age(User, age)
+def users_above_show(
+    request: Request,
+    age: int = Form(...),
+    session: Session = Depends(get_session),
+):
+    users = user_db.get_users_above_age(session, User, age)
     return templates.TemplateResponse(
         "filters/users_filter_result.html",
         {"request": request, "age": age, "users": users},
     )
 
 
-@app.get("/pages/filters/age/between", response_class=FileResponse)
-def users_between_page():
-    return FileResponse("templates/filters/filter_users_age_between.html")
-
-
 @app.post("/api/filters/age/between", response_class=HTMLResponse)
-def users_between_show(request: Request, min_age: int = Form(...), max_age: int = Form(...),
-                       db: DatabaseLayer = Depends(get_db)):
-    users = db.get_users_between_age(User, min_age, max_age)
+def users_between_show(
+    request: Request,
+    min_age: int = Form(...),
+    max_age: int = Form(...),
+    session: Session = Depends(get_session),
+):
+    users = user_db.get_users_between_age(session, User, min_age, max_age)
     return templates.TemplateResponse(
         "filters/users_filter_result.html",
         {"request": request, "min_age": min_age, "max_age": max_age, "users": users},
