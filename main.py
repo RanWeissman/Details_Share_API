@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 import time
 from datetime import date
 from typing import Generator
@@ -15,9 +16,6 @@ from app_logging import configure_logging, get_logger
 from database.db_core import SessionLocal, init_db, close_db
 from database.user_repository import UsersRepository
 from models.user import User
-
-
-from contextlib import asynccontextmanager
 
 ####################################################################### Logging Configuration
 configure_logging()
