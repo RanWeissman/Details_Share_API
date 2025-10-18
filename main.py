@@ -20,6 +20,7 @@ from models.user import User
 ####################################################################### Logging Configuration
 configure_logging()
 logger = get_logger("app.main logger: ")
+
 ####################################################################### Lifespan Event Handler
 @asynccontextmanager
 async def lifespan(_: FastAPI):
@@ -30,10 +31,13 @@ async def lifespan(_: FastAPI):
     finally:
         close_db()
         logger.info("Shutdown complete")
+
 ####################################################################### FastAPI App Initialization
 app = FastAPI(lifespan=lifespan)
+
 ####################################################################### Jinja2 Templates Setup
 templates = Jinja2Templates(directory="templates")
+
 ####################################################################### CORS Middleware Setup
 app.add_middleware(
     CORSMiddleware,
@@ -71,8 +75,8 @@ async def log_request_time(
     logger.info("%s %s took %s", request.method, request.url.path, formatted_time)
     response.headers["X-Process-Time"] = formatted_time
     return response
-####################################################################### Home Page Endpoint
 
+####################################################################### Home Page Endpoint
 @app.get("/")
 def show_homepage(
         request: Request,
@@ -83,7 +87,6 @@ def show_homepage(
     )
 
 ####################################################################### CRUD Endpoints
-
 @app.get("/pages/users/create", name="users_create_page")
 def create_user_page(request: Request):
     return templates.TemplateResponse(
@@ -154,7 +157,6 @@ def delete_user(
     )
 
 ####################################################################### Show All Users Endpoints
-
 @app.get("/pages/users/all", name="api_users_show_all")
 def get_all_users(
         request: Request,
@@ -189,7 +191,6 @@ def get_users_json(
     return JSONResponse(content=users_data)
 
 ####################################################################### Filtering Endpoints
-
 @app.get("/pages/filters/menu", name="filters_menu_page")
 def filter_page(
         request: Request,
@@ -252,7 +253,6 @@ def users_between_show(
     )
 
 ####################################################################### Debugging Endpoints
-
 @app.get("/api/debug/routes")
 def debug_routes() -> HTMLResponse:
     lines = []

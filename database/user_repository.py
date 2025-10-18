@@ -45,7 +45,7 @@ class UsersRepository:
         )
         return list(self.session.exec(stmt).all())
 
-## private static function - handles february 29 case
+## private static help def - handles february 29 case
 def _years_ago(d: date, years: int) -> date:
     try:
         return d.replace(year=d.year - years)
