@@ -12,12 +12,28 @@ from starlette.middleware.base import RequestResponseEndpoint
 from starlette.responses import Response
 
 from app_logging import configure_logging, get_logger
-from database.db_core import SessionLocal
+from database.db_core import SessionLocal, init_db, close_db
 from database.user_repository import UsersRepository
 from models.user import User
 
+
+from contextlib import asynccontextmanager
+
+####################################################################### Logging Configuration
+configure_logging()
+logger = get_logger("app.main logger: ")
+####################################################################### Lifespan Event Handler
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    init_db()
+    logger.info("DB initialize - This is how we do it !!")
+    try:
+        yield
+    finally:
+        close_db()
+        logger.info("Shutdown complete")
 ####################################################################### FastAPI App Initialization
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 ####################################################################### Jinja2 Templates Setup
 templates = Jinja2Templates(directory="templates")
 ####################################################################### CORS Middleware Setup
@@ -31,9 +47,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-####################################################################### Logging Configuration
-configure_logging()
-logger = get_logger("app.main")
+
 ####################################################################### Database Session Dependency
 def get_session() -> Generator[Session, None, None]:
     s = SessionLocal()
@@ -45,7 +59,7 @@ def get_session() -> Generator[Session, None, None]:
         raise
     finally:
         s.close()
-####################################################################### Middleware to Log Request Processing Time
+        ################################### Middleware to Log Request Processing Time
 @app.middleware("http")
 async def log_request_time(
         request: Request,
