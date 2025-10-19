@@ -28,7 +28,6 @@ async def lifespan(_: FastAPI):
     try:
         yield
     finally:
-        db.dispose()
         logger.info("Shutdown complete")
 ####################################################################### Database Core Initialization
 db = DBCore()

@@ -28,7 +28,7 @@ class UsersRepository:
 
     def get_users_above_age(self, model: Type[SQLModel], age: int) -> List[SQLModel]:
         today = date.today()
-        cutoff = _years_ago(date.today(), age)
+        cutoff = today - relativedelta(years=10)
         stmt = select(model).where(model.date_of_birth <= cutoff)
         return list(self.session.exec(stmt).all())
 
@@ -36,19 +36,12 @@ class UsersRepository:
         self, model: Type[SQLModel], min_age: int, max_age: int
     ) -> List[SQLModel]:
         today = date.today()
-        max_birth = _years_ago(today, min_age)
+        max_birth = today - relativedelta(years=max_age)
 
-        min_birth = _years_ago(today, max_age)
+        min_birth = today - relativedelta(years=min_age)
 
         stmt = select(model).where(
             (model.date_of_birth >= min_birth) & (model.date_of_birth <= max_birth)
         )
         return list(self.session.exec(stmt).all())
-
-## private static help def - handles february 29 case
-def _years_ago(d: date, years: int) -> date:
-    try:
-        return d.replace(year=d.year - years)
-    except ValueError:
-        return d.replace(month=2, day=28, year=d.year - years)
 
