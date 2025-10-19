@@ -6,10 +6,12 @@ This FastAPI project manages users, serving HTML pages with Jinja2.
 Implements basic CRUD operations, and providing user filtering option.
 ```
 ---
-## Install dependencies**
+## Install dependencies
+```bash
+- Python ≥ 3.9
+```
 ```bash
 pip install -r requirements.txt
-
 ```
 ---
 ## Run the app 
