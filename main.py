@@ -13,7 +13,7 @@ from starlette.middleware.base import RequestResponseEndpoint
 from starlette.responses import Response
 
 from app_logging import configure_logging, get_logger
-from database.db_core import SessionLocal, init_db, close_db
+from database.db_core import DBCore
 from database.user_repository import UsersRepository
 from models.user import User
 
@@ -24,13 +24,14 @@ logger = get_logger("app.main logger: ")
 ####################################################################### Lifespan Event Handler
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    init_db()
     logger.info("DB initialize - This is how we do it !!")
     try:
         yield
     finally:
-        close_db()
+        db.dispose()
         logger.info("Shutdown complete")
+####################################################################### Database Core Initialization
+db = DBCore()
 
 ####################################################################### FastAPI App Initialization
 app = FastAPI(lifespan=lifespan)
@@ -52,7 +53,7 @@ app.add_middleware(
 
 ####################################################################### Database Session Dependency
 def get_session() -> Generator[Session, None, None]:
-    s = SessionLocal()
+    s =  db.get_session()
     try:
         yield s
         s.commit()
