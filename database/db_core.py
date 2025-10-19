@@ -3,7 +3,6 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.orm import sessionmaker
 from sqlmodel import SQLModel, Session, create_engine
 
-
 DB_URL = "sqlite:///ourDB.db"
 
 class DBCore:
@@ -35,7 +34,6 @@ class DBCore:
     def __del__(self) -> None:
         self._engine.dispose()
 
-    # def get_session(self) -> Optional[Session]:
     def get_session(self):
         if self._sessionMaker is not None:
             return self._sessionMaker()
