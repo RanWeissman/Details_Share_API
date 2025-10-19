@@ -1,5 +1,7 @@
 from typing import Type, List
 from datetime import date
+
+from dateutil.relativedelta import relativedelta
 from sqlmodel import Session, SQLModel, select
 
 class UsersRepository:
@@ -28,7 +30,7 @@ class UsersRepository:
 
     def get_users_above_age(self, model: Type[SQLModel], age: int) -> List[SQLModel]:
         today = date.today()
-        cutoff = today - relativedelta(years=10)
+        cutoff = today - relativedelta(years=age)
         stmt = select(model).where(model.date_of_birth <= cutoff)
         return list(self.session.exec(stmt).all())
 
@@ -36,12 +38,12 @@ class UsersRepository:
         self, model: Type[SQLModel], min_age: int, max_age: int
     ) -> List[SQLModel]:
         today = date.today()
-        max_birth = today - relativedelta(years=max_age)
+        oldest_birth = today - relativedelta(years=max_age)
 
-        min_birth = today - relativedelta(years=min_age)
+        youngest_birth = today - relativedelta(years=min_age)
 
         stmt = select(model).where(
-            (model.date_of_birth >= min_birth) & (model.date_of_birth <= max_birth)
+            (model.date_of_birth >= oldest_birth) & (model.date_of_birth <= youngest_birth)
         )
         return list(self.session.exec(stmt).all())
 

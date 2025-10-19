@@ -168,7 +168,9 @@ def get_all_users(
     #
     return templates.TemplateResponse(
         "users/show_users.html",
-        {"request": request, "users": users}
+        {"request": request, "users": users},
+        status_code=status.HTTP_200_OK,
+
     )
 
 @app.get("/api/users/all", name="json_users_show_all")
@@ -234,6 +236,8 @@ def users_above_show(
     return templates.TemplateResponse(
         "filters/users_filter_result.html",
         {"request": request, "age": age, "users": users},
+        status_code=status.HTTP_200_OK,
+
     )
 
 @app.post("/api/filters/age/between", name="api_age_between")
@@ -250,6 +254,8 @@ def users_between_show(
     return templates.TemplateResponse(
         "filters/users_filter_result.html",
         {"request": request, "min_age": min_age, "max_age": max_age, "users": users},
+        status_code=status.HTTP_200_OK,
+
     )
 
 ####################################################################### Debugging Endpoints

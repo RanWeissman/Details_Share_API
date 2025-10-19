@@ -1,5 +1,4 @@
 from typing import Optional
-from sqlalchemy.engine import Engine
 from sqlalchemy.orm import sessionmaker
 from sqlmodel import SQLModel, Session, create_engine
 
