@@ -19,17 +19,21 @@ pip install -r requirements.txt
 #### Directly from powershell or terminal
 ```bash
 docker build -t details-share-api:latest https://github.com/RanWeissman/Details_Share_API.git#main
+```
+```bash
 docker run --rm -p 8000:8000 details-share-api:latest
 ```
 
 ### Option B — With clone the project: 
-#### Directly from powershell or terminal (cd Details_Share_API)
 ```bash
 git clone https://github.com/RanWeissman/Details_Share_API.git
+```
+```bash
 cd Details_Share_API
+```
+```bash
 docker compose up --build
 ```
-
 
 The server will start on: <http://127.0.0.1:8000>
 
