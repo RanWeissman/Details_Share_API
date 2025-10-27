@@ -14,10 +14,19 @@ Implements basic CRUD operations, and providing user filtering option.
 pip install -r requirements.txt
 ```
 ---
-## Run the app 
+## Run the server
+by uvicorn
 ```bash
 uvicorn main:app --reload
 ```
+by docker
+```bash
+docker build -t details-share-api:latest .
+```
+```bash
+docker run --rm -p 8000:8000 details-share-api:latest .
+```
+
 The server will start on: <http://127.0.0.1:8000>
 
 ```mermaid
