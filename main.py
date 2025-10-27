@@ -1,3 +1,4 @@
+import os
 from contextlib import asynccontextmanager
 import time
 from datetime import date
@@ -25,6 +26,8 @@ logger = get_logger("app.main logger: ")
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     logger.info("DB initialize - This is how we do it !!")
+    base = os.getenv("PUBLIC_BASE_URL", "http://127.0.0.1:8000")
+    logger.info(f"App is running at {base} (docs: {base}/docs)")
     try:
         yield
     finally:

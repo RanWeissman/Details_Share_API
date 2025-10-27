@@ -24,7 +24,7 @@ by docker
 docker build -t details-share-api:latest .
 ```
 ```bash
-docker run --rm -p 8000:8000 details-share-api:latest .
+docker run --rm -p 8000:8000 details-share-api:latest
 ```
 
 The server will start on: <http://127.0.0.1:8000>
