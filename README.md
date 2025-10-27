@@ -16,7 +16,6 @@ pip install -r requirements.txt
 ---
 ## Run the server
 ### Option A — Without downloading (build directly from GitHub)
-#### Directly from powershell or terminal
 ```bash
 docker build -t details-share-api:latest https://github.com/RanWeissman/Details_Share_API.git#main
 ```
@@ -34,7 +33,19 @@ cd Details_Share_API
 ```bash
 docker compose up --build
 ```
-
+### Option C — Without Docker, run locally: 
+```bash
+git clone https://github.com/RanWeissman/Details_Share_API.git
+```
+```bash
+cd Details_Share_API
+```
+```bash
+py -m pip install -r requirements.txt
+```
+```bash
+py -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
+```
 The server will start on: <http://127.0.0.1:8000>
 
 ```mermaid
