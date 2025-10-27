@@ -15,17 +15,21 @@ pip install -r requirements.txt
 ```
 ---
 ## Run the server
-by uvicorn
+### Option A — Without downloading (build directly from GitHub)
+#### Directly from powershell or terminal
 ```bash
-uvicorn main:app --reload
-```
-by docker
-```bash
-docker build -t details-share-api:latest .
-```
-```bash
+docker build -t details-share-api:latest https://github.com/RanWeissman/Details_Share_API.git#main
 docker run --rm -p 8000:8000 details-share-api:latest
 ```
+
+### Option B — With clone the project: 
+#### Directly from powershell or terminal (cd Details_Share_API)
+```bash
+git clone https://github.com/RanWeissman/Details_Share_API.git
+cd Details_Share_API
+docker compose up --build
+```
+
 
 The server will start on: <http://127.0.0.1:8000>
 
