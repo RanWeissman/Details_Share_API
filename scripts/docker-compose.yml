@@ -1,12 +1,12 @@
 version: "3.9"
+
 services:
-  api:
-    build: ..
-    image: details-share-api:latest
+  app:
+    build: .
+    container_name: details_share_api
     ports:
-      - "8000:8000"
+      - "7000:8000"
     volumes:
-      - ./:/scripts
-    command: uvicorn main:scripts --host 0.0.0.0 --port 8000 --reload --reload-dir /scripts
+      - .:/app
     environment:
-      - WATCHFILES_FORCE_POLLING=true
+      - PYTHONUNBUFFERED=1
