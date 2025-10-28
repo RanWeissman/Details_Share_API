@@ -1,46 +1,24 @@
-# Python bytecode & caches
+# Python caches
 __pycache__/
+*.pyc
 *.pyo
-*.pyd
-*.so
 
-# Virtual environments
-../.venv/
+# Virtual env
+.venv/
 venv/
 
-# Build / packaging artifacts
-build/
-dist/
-*.egg-info/
-.eggs/
-
-# Test / tooling caches
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-.coverage
-.coverage.*
-htmlcov/
-
-# IDE / editor settings
+# PyCharm
 .idea/
-.vscode/
-*.code-workspace
-
-# OS files
-.DS_Store
-Thumbs.db
 
 # Git
 .git
 .gitignore
 
-# Local env & secrets
+# Local env vars
 .env
 .env.*
-*.env
 
-# Logs & local data
-*.log
-*.sqlite
+# Local DB & logs
 *.db
+*.sqlite
+*.log
