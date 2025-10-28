@@ -11,5 +11,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY scripts/ /app/scripts/
 
-CMD ["python", "-m", "scripts.run_server"]
+CMD ["uvicorn", "scripts.main:app", "--host", "0.0.0.0", "--port", "8000"]
 
