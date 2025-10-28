@@ -25,12 +25,12 @@ COPY --from=builder /wheels /wheels
 RUN pip install --no-cache-dir /wheels/* && rm -rf /wheels
 
 COPY main.py app_logging.py requirements.txt README.md ./
-COPY database/ ./database/
-COPY models/ ./models/
-COPY templates/ ./templates/
-COPY docs/ ./docs/
+COPY database ./database/
+COPY models ./models/
+COPY templates ./templates/
+COPY docs ./docs/
 
-RUN mkdir -p /app/database && chown -R appuser:appuser /app
+RUN mkdir -p /scripts/database && chown -R appuser:appuser /scripts
 
 USER appuser
 

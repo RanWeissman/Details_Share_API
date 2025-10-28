@@ -13,14 +13,14 @@ from sqlmodel import Session
 from starlette.middleware.base import RequestResponseEndpoint
 from starlette.responses import Response
 
-from app_logging import configure_logging, get_logger
-from database.db_core import DBCore
-from database.user_repository import UsersRepository
-from models.user import User
+from scripts import app_logging as AP
+from scripts.database import db_core as DB
+from scripts.database import user_repository as UR
+from scripts.models.user import User
 
 ####################################################################### Logging Configuration
-configure_logging()
-logger = get_logger("app.main logger: ")
+AP.configure_logging()
+logger = AP.get_logger("main logger: ")
 
 ####################################################################### Lifespan Event Handler
 @asynccontextmanager
@@ -33,13 +33,13 @@ async def lifespan(_: FastAPI):
     finally:
         logger.info("Shutdown complete")
 ####################################################################### Database Core Initialization
-db = DBCore()
+db = DB.DBCore()
 
 ####################################################################### FastAPI App Initialization
 app = FastAPI(lifespan=lifespan)
 
 ####################################################################### Jinja2 Templates Setup
-templates = Jinja2Templates(directory="templates")
+templates = Jinja2Templates(directory="scripts/templates")
 
 ####################################################################### CORS Middleware Setup
 app.add_middleware(
@@ -108,7 +108,7 @@ def users_create(
 ) -> Response:
     error = f"User with this ID or Email already exists!"
     status_code = status.HTTP_400_BAD_REQUEST
-    user_repo = UsersRepository(session)
+    user_repo = UR.UsersRepository(session)
     email_norm = email.strip().casefold()
     if not user_repo.check_id_and_email(User, id, email):  # if not exists
         user = User(id=id, name=name, email=email_norm, date_of_birth=date_of_birth)
@@ -147,7 +147,7 @@ def delete_user(
     id: int = Form(...),
     session: Session = Depends(get_session),
 ) -> Response:
-    user_repo = UsersRepository(session)
+    user_repo = UR.UsersRepository(session)
     # delete user from DB
     success = user_repo.delete_by_id(User, id)
     #
@@ -165,7 +165,7 @@ def get_all_users(
         request: Request,
         session: Session = Depends(get_session)
 ) -> Response:
-    user_repo = UsersRepository(session)
+    user_repo = UR.UsersRepository(session)
     # get all users from DB
     users = user_repo.get_all(User)
     #
@@ -180,7 +180,7 @@ def get_all_users(
 def get_users_json(
         session: Session = Depends(get_session)
 ) -> JSONResponse:
-    user_repo = UsersRepository(session)
+    user_repo = UR.UsersRepository(session)
     # get all users from DB
     users = user_repo.get_all(User)
     #
@@ -232,7 +232,7 @@ def users_above_show(
         age: int = Form(...),
         session: Session = Depends(get_session),
 ) -> Response:
-    user_repo = UsersRepository(session)
+    user_repo = UR.UsersRepository(session)
     # get users above age from DB
     users = user_repo.get_users_above_age(User, age)
     #
@@ -250,7 +250,7 @@ def users_between_show(
         max_age: int = Form(...),
         session: Session = Depends(get_session),
 ) -> Response:
-    user_repo = UsersRepository(session)
+    user_repo = UR.UsersRepository(session)
     # get users between ages from DB
     users = user_repo.get_users_between_age(User, min_age, max_age)
     #

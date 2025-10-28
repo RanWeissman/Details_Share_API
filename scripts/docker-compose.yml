@@ -1,12 +1,12 @@
 version: "3.9"
 services:
   api:
-    build: . 
+    build: ..
     image: details-share-api:latest
     ports:
       - "8000:8000"
     volumes:
-      - ./:/app
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /app
+      - ./:/scripts
+    command: uvicorn main:scripts --host 0.0.0.0 --port 8000 --reload --reload-dir /scripts
     environment:
       - WATCHFILES_FORCE_POLLING=true
