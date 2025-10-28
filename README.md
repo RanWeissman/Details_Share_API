@@ -44,7 +44,7 @@ cd Details_Share_API
 py -m pip install -r requirements.txt
 ```
 ```bash
-py -m scripts.run_server
+py -m src.run_server
 ```
 The server will start on: <http://127.0.0.1:8000>
 

@@ -21,5 +21,5 @@ def configure_logging(level: int = logging.INFO) -> None:
         "root": {"handlers": ["console"], "level": level},
     })
 
-def get_logger(name: str = "scripts") -> logging.Logger:
+def get_logger(name: str = "src") -> logging.Logger:
     return logging.getLogger(name)

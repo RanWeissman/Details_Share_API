@@ -13,10 +13,10 @@ from sqlmodel import Session
 from starlette.middleware.base import RequestResponseEndpoint
 from starlette.responses import Response
 
-from scripts import app_logging as AP
-from scripts.database import db_core as DB
-from scripts.database import user_repository as UR
-from scripts.models.user import User
+from src import app_logging as AP
+from src.database import db_core as DB
+from src.database import user_repository as UR
+from src.models.user import User
 
 ####################################################################### Logging Configuration
 AP.configure_logging()
@@ -39,7 +39,7 @@ db = DB.DBCore()
 app = FastAPI(lifespan=lifespan)
 
 ####################################################################### Jinja2 Templates Setup
-templates = Jinja2Templates(directory="scripts/templates")
+templates = Jinja2Templates(directory="src/templates")
 
 ####################################################################### CORS Middleware Setup
 app.add_middleware(
