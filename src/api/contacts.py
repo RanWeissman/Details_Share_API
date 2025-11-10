@@ -119,7 +119,7 @@ def filter_page(request: Request) -> Response:
 @router.get("/pages/filters/age/above", name="filter_age_above_page")
 def contacts_above_page(request: Request) -> Response:
     return templates.TemplateResponse(
-        "filters/filter_contacts_age_above.html",
+        "contacts/filters/filter_contacts_age_above.html",
         {"request": request},
         status_code=status.HTTP_200_OK,
     )
@@ -127,7 +127,7 @@ def contacts_above_page(request: Request) -> Response:
 @router.get("/pages/filters/age/between", name="filter_age_between_page")
 def contacts_between_page(request: Request) -> Response:
     return templates.TemplateResponse(
-        "filters/filter_contacts_age_between.html",
+        "contacts/filters/filter_contacts_age_between.html",
         {"request": request},
         status_code=status.HTTP_200_OK,
     )
@@ -141,7 +141,7 @@ def contacts_above_show(
     user_repo = ur.ContactRepository(session)
     contacts = user_repo.get_contacts_above_age(Contact, age)
     return templates.TemplateResponse(
-        "filters/contacts_filter_result.html",
+        "contacts/filters/contacts_filter_result.html",
         {"request": request, "age": age, "contacts": contacts},
         status_code=status.HTTP_200_OK,
     )
@@ -156,7 +156,7 @@ def contacts_between_show(
     user_repo = ur.ContactRepository(session)
     contacts = user_repo.get_contacts_between_age(Contact, min_age, max_age)
     return templates.TemplateResponse(
-        "filters/contacts_filter_result.html",
+        "contacts/filters/contacts_filter_result.html",
         {"request": request, "min_age": min_age, "max_age": max_age, "contacts": contacts},
         status_code=status.HTTP_200_OK,
     )

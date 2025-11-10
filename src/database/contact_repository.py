@@ -28,13 +28,13 @@ class ContactRepository:
     def get_all(self, model: Type[SQLModel]) -> List[SQLModel]:
         return list(self.session.exec(select(model)).all())
 
-    def get_users_above_age(self, model: Type[SQLModel], age: int) -> List[SQLModel]:
+    def get_contacts_above_age(self, model: Type[SQLModel], age: int) -> List[SQLModel]:
         today = date.today()
         cutoff = today - relativedelta(years=age)
         stmt = select(model).where(model.date_of_birth <= cutoff)
         return list(self.session.exec(stmt).all())
 
-    def get_users_between_age(
+    def get_contacts_between_age(
         self, model: Type[SQLModel], min_age: int, max_age: int
     ) -> List[SQLModel]:
         today = date.today()
