@@ -1,26 +1,32 @@
+from datetime import date
+from fastapi.responses import JSONResponse
+
 import os
 from contextlib import asynccontextmanager
 import time
-from datetime import date
 from typing import Generator
-
 from fastapi import Depends, FastAPI, Form, Request, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse
 from fastapi.routing import APIRoute
 from fastapi.templating import Jinja2Templates
 from sqlmodel import Session
 from starlette.middleware.base import RequestResponseEndpoint
-from starlette.responses import Response
+from starlette.responses import Response, RedirectResponse
 
-from src import app_logging as AP
-from src.database import db_core as DB
-from src.database import user_repository as UR
+from src.database.account_repository import AccountsRepository
+from src.models.account import Account
+from src.core.security import get_password_hash, verify_password, create_access_token
+
+from src import app_logging as ap
+from src.database import db_core as db
+from src.database import user_repository as ur
 from src.models.user import User
 
+
 ####################################################################### Logging Configuration
-AP.configure_logging()
-logger = AP.get_logger("main logger: ")
+ap.configure_logging()
+logger = ap.get_logger("main logger: ")
 
 ####################################################################### Lifespan Event Handler
 @asynccontextmanager
@@ -33,7 +39,7 @@ async def lifespan(_: FastAPI):
     finally:
         logger.info("Shutdown complete")
 ####################################################################### Database Core Initialization
-db = DB.DBCore()
+db = db.DBCore()
 
 ####################################################################### FastAPI App Initialization
 app = FastAPI(lifespan=lifespan)
@@ -85,7 +91,7 @@ def show_homepage(
         request: Request,
 ) -> Response:
     return templates.TemplateResponse(
-        "homepage.html",
+        "auth/homepage.html",
         {"request": request}
     )
 
@@ -108,7 +114,7 @@ def users_create(
 ) -> Response:
     error = f"User with this ID or Email already exists!"
     status_code = status.HTTP_400_BAD_REQUEST
-    user_repo = UR.UsersRepository(session)
+    user_repo = ur.UsersRepository(session)
     email_norm = email.strip().casefold()
     if not user_repo.check_id_and_email(User, id, email):  # if not exists
         user = User(id=id, name=name, email=email_norm, date_of_birth=date_of_birth)
@@ -147,7 +153,7 @@ def delete_user(
     id: int = Form(...),
     session: Session = Depends(get_session),
 ) -> Response:
-    user_repo = UR.UsersRepository(session)
+    user_repo = ur.UsersRepository(session)
     # delete user from DB
     success = user_repo.delete_by_id(User, id)
     #
@@ -165,7 +171,7 @@ def get_all_users(
         request: Request,
         session: Session = Depends(get_session)
 ) -> Response:
-    user_repo = UR.UsersRepository(session)
+    user_repo = ur.UsersRepository(session)
     # get all users from DB
     users = user_repo.get_all(User)
     #
@@ -180,7 +186,7 @@ def get_all_users(
 def get_users_json(
         session: Session = Depends(get_session)
 ) -> JSONResponse:
-    user_repo = UR.UsersRepository(session)
+    user_repo = ur.UsersRepository(session)
     # get all users from DB
     users = user_repo.get_all(User)
     #
@@ -232,7 +238,7 @@ def users_above_show(
         age: int = Form(...),
         session: Session = Depends(get_session),
 ) -> Response:
-    user_repo = UR.UsersRepository(session)
+    user_repo = ur.UsersRepository(session)
     # get users above age from DB
     users = user_repo.get_users_above_age(User, age)
     #
@@ -250,7 +256,7 @@ def users_between_show(
         max_age: int = Form(...),
         session: Session = Depends(get_session),
 ) -> Response:
-    user_repo = UR.UsersRepository(session)
+    user_repo = ur.UsersRepository(session)
     # get users between ages from DB
     users = user_repo.get_users_between_age(User, min_age, max_age)
     #
@@ -260,6 +266,105 @@ def users_between_show(
         status_code=status.HTTP_200_OK,
 
     )
+####################################################################### Login account endpoints
+@app.get("/menu", name="menu_after_login")
+def the_new_api(request: Request):
+    return templates.TemplateResponse(
+        "menu.html",
+        {"request": request}
+    )
+@app.get("/pages/account/signup", name="account_create_page")
+def account_create_page(
+        request: Request,
+) -> Response:
+    return templates.TemplateResponse(
+        "auth/signup/signup.html",
+        {"request": request},
+        status_code=status.HTTP_200_OK,
+    )
+
+
+@app.post("/api/account/signup", name="api_signup_create")
+def signup_account_results(
+        request: Request,
+        username: str = Form(...),
+        email: str = Form(...),
+        password: str = Form(...),
+        session: Session = Depends(get_session)
+
+) -> Response:
+    error = f"User with this ID or Email already exists!"
+    status_code = status.HTTP_400_BAD_REQUEST
+    account_repo = AccountsRepository(session)
+    email_norm = email.strip().casefold()
+    user_norm = username.strip().casefold()
+    hashed = get_password_hash(password)
+    if not account_repo.check_mail_and_username(Account, email_norm, user_norm):  # if not exists
+        account_repo.create_account(username=user_norm, email=email_norm, hashed_password=hashed)
+        error = None
+        status_code = status.HTTP_201_CREATED
+    return templates.TemplateResponse(
+        "auth/signup/signup_result.html",
+        {
+            "request": request,
+            "error": error,
+            "username": user_norm,
+            "email": email_norm,
+        },
+        status_code=status_code,
+    )
+######################################################################## Login Endpoints
+
+
+@app.get("/pages/account/login", name="account_login_page")
+def account_login_page(
+        request: Request,
+) -> Response:
+    return templates.TemplateResponse(
+        "auth/login/login.html",
+        {"request": request},
+        status_code=status.HTTP_200_OK,
+    )
+
+
+@app.post("/api/account/login", name="api_account_login")
+def login(
+    request: Request,
+    username: str = Form(...),
+    password: str = Form(...),
+    session: Session = Depends(get_session),
+):
+    user_norm = username.strip().casefold()
+    repo = AccountsRepository(session)
+    acc = repo.get_by_username(user_norm)
+
+    if not acc or not verify_password(password, acc.hashed_password) or not acc.is_active:
+        return templates.TemplateResponse(
+            "auth/login/login_fail.html",
+            {"request": request, "username": user_norm}
+        )
+
+    token = create_access_token(sub=acc.email, extra={"id": acc.id, "role": str(acc.role)})
+    success_target = request.url_for("menu_after_login")
+    resp = RedirectResponse(url=str(success_target), status_code=status.HTTP_303_SEE_OTHER)
+    resp.set_cookie(
+        key="access_token",
+        value=token,
+        httponly=True,
+        secure=bool(int(os.getenv("COOKIE_SECURE", "0"))),
+        samesite="lax",
+        max_age=60 * 60,
+        path="/",
+    )
+    return resp
+
+@app.post("/api/account/logout", name="api_account_logout")
+def logout():
+    resp = HTMLResponse("Logged out")
+    resp.delete_cookie("access_token", path="/")
+    return resp
+
+
 
 ####################################################################### Debugging Endpoints
 @app.get("/api/debug/routes")
