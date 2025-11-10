@@ -19,7 +19,7 @@
 
     <h2>Please enter your ID:</h2>
 
-    <form action="{{ request.url_for('api_users_delete') }}" method="post">
+    <form action="{{ request.url_for('api_contacts_delete') }}" method="post">
         <label for="id">Enter User ID</label><br>
         <input id="id" type="number" name="id" placeholder="Your id" min="0" required>
         <br><br>
@@ -27,7 +27,7 @@
     </form>
 
     <br><br>
-    <a href="/" style="text-decoration:none; color:blue;">⬅ Back to Home Page</a>
+    <a href="/menu" style="text-decoration:none; color:blue;">⬅ Back to Home Page</a>
 
 </body>
 </html>

@@ -11,7 +11,7 @@ from starlette.responses import Response
 from fastapi.responses import HTMLResponse
 
 from src import app_logging as ap
-from src.api.users import router as users_router
+from src.api.contacts import router as contacts_router
 from src.api.accounts import router as accounts_router
 
 ####################################################################### Logging Configuration
@@ -55,7 +55,7 @@ async def log_request_time(
     return response
 ####################################################################### Include Routers
 app.include_router(accounts_router)
-app.include_router(users_router)
+app.include_router(contacts_router)
 ####################################################################### Debugging Endpoints
 @app.get("/api/debug/routes")
 def debug_routes() -> HTMLResponse:

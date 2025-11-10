@@ -2,7 +2,7 @@
 
 ---
 ```bash
-This FastAPI project manages users, serving HTML pages with Jinja2.
+This FastAPI project manages contacts, serving HTML pages with Jinja2.
 Implements basic CRUD operations, and providing user filtering option.
 ```
 ---

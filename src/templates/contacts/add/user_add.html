@@ -18,7 +18,7 @@
 
         <h2>Create a New User</h2>
 
-        <form action="{{ request.url_for('api_users_create') }}" method="post">
+        <form action="{{ request.url_for('api_contacts_create') }}" method="post">
 
             <label for="name">Name:</label>
             <input id="name" type="text" name="name" required><br><br>
@@ -38,7 +38,7 @@
         </form>
        <br>
 
-        <a href="/">⬅ Back to Home Page</a>
+        <a href="/menu">⬅ Back to Home Page</a>
 
     </body>
 </html>

@@ -4,7 +4,7 @@ from datetime import date
 from dateutil.relativedelta import relativedelta
 from sqlmodel import Session, SQLModel, select
 
-class UsersRepository:
+class ContactRepository:
     def __init__(self, session: Session):
         self.session = session
 

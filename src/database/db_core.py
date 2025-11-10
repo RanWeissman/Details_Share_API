@@ -16,6 +16,8 @@ class DBCore:
             url,
             connect_args={"check_same_thread": False}  # Needed for SQLite
         )
+        from src.models.contact import Contact
+        from src.models.account import Account
         ## create tables
         SQLModel.metadata.create_all(self._engine)
         ## create session factory
