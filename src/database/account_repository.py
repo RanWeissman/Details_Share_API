@@ -2,7 +2,6 @@ from typing import List, Optional, Type
 from sqlmodel import Session, select, SQLModel
 from src.models.account import Account
 
-
 class AccountsRepository:
     def __init__(self, session: Session):
         self.session = session
@@ -11,8 +10,6 @@ class AccountsRepository:
         stmt = select(model).where((model.email == email_norm) | (model.username == username))
         return self.session.exec(stmt).first() is not None
 
-
-    # ---------- Creates ----------
     def add(self, account: Account) -> Account:
         self.session.add(account)
         self.session.flush()
@@ -23,7 +20,6 @@ class AccountsRepository:
         acc = Account(username=username, email=email, hashed_password=hashed_password)
         return self.add(acc)
 
-    # ---------- Deletes ----------
     def delete_by_id(self, obj_id: int) -> bool:
         acc = self.session.get(Account, obj_id)
         if not acc:
@@ -38,7 +34,6 @@ class AccountsRepository:
         self.session.delete(acc)
         return True
 
-    # ---------- Reads ----------
     def get_all(self) -> List[Account]:
         return list(self.session.exec(select(Account)).all())
 
@@ -55,7 +50,6 @@ class AccountsRepository:
             select(Account).where(Account.email == email)
         ).first()
 
-    # ---------- Uniqueness / existence checks ----------
     def exists_username_or_email(self, username: str, email: str) -> bool:
         """
         בודק אם קיים חשבון עם אותו username או email.

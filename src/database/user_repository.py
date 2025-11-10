@@ -46,4 +46,3 @@ class UsersRepository:
             (model.date_of_birth >= oldest_birth) & (model.date_of_birth <= youngest_birth)
         )
         return list(self.session.exec(stmt).all())
-

@@ -17,7 +17,6 @@ from src.api.accounts import router as accounts_router
 ####################################################################### Logging Configuration
 ap.configure_logging()
 logger = ap.get_logger("main logger: ")
-
 ####################################################################### Lifespan Event Handler
 @asynccontextmanager
 async def lifespan(_: FastAPI):
@@ -28,10 +27,8 @@ async def lifespan(_: FastAPI):
         yield
     finally:
         logger.info("Shutdown complete")
-
 ####################################################################### FastAPI App Initialization
 app = FastAPI(lifespan=lifespan)
-
 ####################################################################### CORS Middleware Setup
 app.add_middleware(
     CORSMiddleware,
@@ -43,7 +40,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 ####################################################################### Middleware to Log Request Processing Time
 @app.middleware("http")
 async def log_request_time(
@@ -57,11 +53,9 @@ async def log_request_time(
     logger.info("%s %s took %s", request.method, request.url.path, formatted_time)
     response.headers["X-Process-Time"] = formatted_time
     return response
-
 ####################################################################### Include Routers
 app.include_router(accounts_router)
 app.include_router(users_router)
-
 ####################################################################### Debugging Endpoints
 @app.get("/api/debug/routes")
 def debug_routes() -> HTMLResponse:

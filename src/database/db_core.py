@@ -1,13 +1,12 @@
-from typing import Optional
 from sqlalchemy.orm import sessionmaker
 from sqlmodel import SQLModel, Session, create_engine
 
 DB_URL = "sqlite:///ourDB.db"
 
 class DBCore:
-    _instance: Optional[bool] = False
+    _instance: bool = False
 
-    def __init__(self, db_url: Optional[str] = None) -> None:
+    def __init__(self, db_url: str = None) -> None:
         if DBCore._instance:
             raise ValueError("DBCore is a singleton class. Use the existing instance.")
         url = db_url or DB_URL

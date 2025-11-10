@@ -6,23 +6,22 @@ from sqlmodel import Session
 from starlette.responses import Response
 
 from src.core.deps import get_session, templates
-from src.core.security import get_current_user
+from src.core.security import (
+    create_access_token,
+    get_password_hash,
+    verify_password,
+)
 from src.database.account_repository import AccountsRepository
 from src.models.account import Account
-from src.core.security import get_password_hash, verify_password, create_access_token
 
-router = APIRouter(
-    dependencies=[Depends(get_current_user)]
-    )
+router = APIRouter()
 ####################################################################### Home / Menu
-
 @router.get("/")
 def show_homepage(request: Request) -> Response:
     return templates.TemplateResponse(
         "auth/homepage.html",
         {"request": request}
     )
-
 
 @router.get("/menu", name="menu_after_login")
 def menu_after_login(request: Request) -> Response:
@@ -31,9 +30,7 @@ def menu_after_login(request: Request) -> Response:
         {"request": request}
     )
 
-
 ####################################################################### Signup Endpoints
-
 @router.get("/pages/account/signup", name="account_create_page")
 def account_create_page(request: Request) -> Response:
     return templates.TemplateResponse(
@@ -41,7 +38,6 @@ def account_create_page(request: Request) -> Response:
         {"request": request},
         status_code=status.HTTP_200_OK,
     )
-
 
 @router.post("/api/account/signup", name="api_signup_create")
 def signup_account_results(
@@ -75,9 +71,7 @@ def signup_account_results(
         status_code=status_code,
     )
 
-
 ####################################################################### Login / Logout Endpoints
-
 @router.get("/pages/account/login", name="account_login_page")
 def account_login_page(request: Request) -> Response:
     return templates.TemplateResponse(
@@ -85,7 +79,6 @@ def account_login_page(request: Request) -> Response:
         {"request": request},
         status_code=status.HTTP_200_OK,
     )
-
 
 @router.post("/api/account/login", name="api_account_login")
 def login(
@@ -117,7 +110,6 @@ def login(
         path="/",
     )
     return resp
-
 
 @router.post("/api/account/logout", name="api_account_logout")
 def logout():
