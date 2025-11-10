@@ -25,7 +25,7 @@ def contacts_create(
         request: Request,
         name: str = Form(...),
         email: str = Form(...),
-        id: int = Form(...),
+        id_1: int = Form(...),
         date_of_birth: date = Form(...),
         session: Session = Depends(get_session)
 ) -> Response:
@@ -34,8 +34,8 @@ def contacts_create(
     user_repo = ur.ContactRepository(session)
     email_norm = email.strip().casefold()
 
-    if not user_repo.check_id_and_email(Contact, id, email):  # if not exists
-        user = Contact(id=id, name=name, email=email_norm, date_of_birth=date_of_birth)
+    if not user_repo.check_id_and_email(Contact, id_1, email):  # if not exists
+        user = Contact(id=id_1, name=name, email=email_norm, date_of_birth=date_of_birth)
         user_repo.add(user)
         error = None
         status_code = status.HTTP_201_CREATED
@@ -64,16 +64,16 @@ def delete_user_page(request: Request) -> Response:
 @router.post("/api/contacts/delete", name="api_contacts_delete")
 def delete_user(
     request: Request,
-    id: int = Form(...),
+    id_1: int = Form(...),
     session: Session = Depends(get_session),
 ) -> Response:
     user_repo = ur.ContactRepository(session)
-    success = user_repo.delete_by_id(Contact, id)
+    success = user_repo.delete_by_id(Contact, id_1)
     status_code = status.HTTP_200_OK if success else status.HTTP_404_NOT_FOUND
 
     return templates.TemplateResponse(
         "contacts/delete/delete_result.html",
-        {"request": request, "success": success, "id": id},
+        {"request": request, "success": success, "id": id_1},
         status_code=status_code,
     )
 

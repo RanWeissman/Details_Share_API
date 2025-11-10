@@ -8,8 +8,8 @@ class ContactRepository:
     def __init__(self, session: Session):
         self.session = session
 
-    def check_id_and_email(self, model: Type[SQLModel], id: int, email_norm: str) -> bool:
-        stmt = select(model).where((model.id == id) | (model.email == email_norm))
+    def check_id_and_email(self, model: Type[SQLModel], id_1: int, email_norm: str) -> bool:
+        stmt = select(model).where((model.id == id_1) | (model.email == email_norm))
         return self.session.exec(stmt).first() is not None
 
     def add(self, obj: SQLModel) -> SQLModel:
