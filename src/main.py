@@ -65,3 +65,8 @@ def debug_routes() -> HTMLResponse:
             lines.append(f"{sorted(r.methods)}  {r.path}  -> {r.endpoint.__name__}")
     html = "<br>".join(lines)
     return HTMLResponse(content=html)
+
+
+"""
+python -m src.run_server
+"""
