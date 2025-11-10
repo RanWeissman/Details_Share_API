@@ -1,9 +1,10 @@
 from datetime import datetime, timedelta, timezone
 from passlib.context import CryptContext
-from jose import jwt
+from jose import jwt, JWTError
 import os
 
-# החלף את ה־CryptContext:
+from fastapi import Request, HTTPException, status
+
 _pwd = CryptContext(schemes=["argon2"], deprecated="auto")
 
 def get_password_hash(password: str) -> str:
@@ -23,3 +24,28 @@ def create_access_token(sub: str, extra: dict = None, minutes: int = None) -> st
     if extra:
         payload.update(extra)
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+
+
+def get_current_user(request: Request) -> dict:
+    """
+    Dependency: מאמת JWT שמגיע מה-cookie בשם 'access_token'.
+    אם אין / לא תקין / פג תוקף -> redirect לדף login.
+    """
+    token = request.cookies.get("access_token")
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_303_SEE_OTHER,
+            detail="Not authenticated",
+            headers={"Location": "/pages/account/login"},
+        )
+
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_303_SEE_OTHER,
+            detail="Invalid or expired token",
+            headers={"Location": "/pages/account/login"},
+        )
+
+    return payload

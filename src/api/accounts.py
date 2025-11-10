@@ -6,13 +6,14 @@ from sqlmodel import Session
 from starlette.responses import Response
 
 from src.core.deps import get_session, templates
+from src.core.security import get_current_user
 from src.database.account_repository import AccountsRepository
 from src.models.account import Account
 from src.core.security import get_password_hash, verify_password, create_access_token
 
-router = APIRouter()
-
-
+router = APIRouter(
+    dependencies=[Depends(get_current_user)]
+    )
 ####################################################################### Home / Menu
 
 @router.get("/")
