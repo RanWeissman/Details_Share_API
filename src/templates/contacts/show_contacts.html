@@ -20,9 +20,9 @@
   </head>
   <body>
 
-    <h2>All Users</h2>
+    <h2>All Contacts</h2>
 
-    {% if users and users|length > 0 %}
+    {% if contacts and contacts|length > 0 %}
     <table>
         <tr>
             <th>ID</th>
@@ -31,18 +31,18 @@
             <th>Date of Birth</th>
         </tr>
 
-        {% for user in users %}
+        {% for contact in contacts %}
         <tr>
-            <td>{{ user.id }}</td>
-            <td>{{ user.name }}</td>
-            <td>{{ user.email }}</td>
-            <td>{{ user.date_of_birth }}</td>
+            <td>{{ contact.id }}</td>
+            <td>{{ contact.name }}</td>
+            <td>{{ contact.email }}</td>
+            <td>{{ contact.date_of_birth }}</td>
         </tr>
         {% endfor %}
 
     </table>
     {% else %}
-    <p>No users found.</p>
+    <p>No contacts found.</p>
     {% endif %}
 
     <br>

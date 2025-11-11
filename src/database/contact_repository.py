@@ -18,6 +18,21 @@ class ContactRepository:
         self.session.refresh(obj)
         return obj
 
+    def get_by_id(self, model: Type[SQLModel], obj_id: int) -> SQLModel or None:
+        return self.session.get(model, obj_id)
+
+    def delete_by_id_and_owner(self, model, contact_id: int, owner_id: int) -> bool:
+        obj = self.session.get(model, contact_id)
+        if not obj:
+            return False
+
+        if obj.owner_id != owner_id:
+            return False
+
+        self.session.delete(obj)
+        self.session.commit()
+        return True
+
     def delete_by_id(self, model: Type[SQLModel], obj_id: int) -> bool:
         db_obj = self.session.get(model, obj_id)
         if not db_obj:

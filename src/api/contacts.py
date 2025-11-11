@@ -6,17 +6,18 @@ from sqlmodel import Session
 from starlette.responses import Response
 
 from src.core.deps import get_session, templates
-from src.core.security import get_current_user
+from src.core.security import auth_required, get_current_contact
 from src.database import contact_repository as ur
 from src.models.contact import Contact
+from src.models.account import Account
 router = APIRouter(
-    dependencies=[Depends(get_current_user)]
-    )
+    dependencies=[Depends(auth_required)],
+)
 
 @router.get("/pages/contacts/create", name="contacts_create_page")
-def create_user_page(request: Request) -> Response:
+def create_contact_page(request: Request) -> Response:
     return templates.TemplateResponse(
-        "contacts/add/user_add.html",
+        "contacts/add/contact_add.html",
         {"request": request}
     )
 
@@ -27,48 +28,64 @@ def contacts_create(
         email: str = Form(...),
         id_1: int = Form(...),
         date_of_birth: date = Form(...),
-        session: Session = Depends(get_session)
+        session: Session = Depends(get_session),
+        current_account: Account = Depends(get_current_contact)
 ) -> Response:
-    error = "User with this ID or Email already exists!"
+    error = "Contact with this ID or Email already exists!"
     status_code = status.HTTP_400_BAD_REQUEST
-    user_repo = ur.ContactRepository(session)
+    contact_repo = ur.ContactRepository(session)
     email_norm = email.strip().casefold()
 
-    if not user_repo.check_id_and_email(Contact, id_1, email):  # if not exists
-        user = Contact(id=id_1, name=name, email=email_norm, date_of_birth=date_of_birth)
-        user_repo.add(user)
+    if not contact_repo.check_id_and_email(Contact, id_1, email):  # if not exists
+        contact = Contact(
+            id=id_1,
+            name=name,
+            email=email_norm,
+            date_of_birth=date_of_birth,
+            owner_id = current_account.id
+        )
+
+        contact_repo.add(contact)
         error = None
         status_code = status.HTTP_201_CREATED
 
     return templates.TemplateResponse(
-        "contacts/add/user_add_result.html",
+        "contacts/add/contact_add_result.html",
         {
             "request": request,
             "error": error,
             "name": name,
-            "email": email,
-            "id": id,
+            "email": email_norm,
+            "id": id_1,
             "date_of_birth": date_of_birth,
         },
         status_code=status_code,
     )
 
 @router.get("/pages/contacts/delete", name="contacts_delete_page")
-def delete_user_page(request: Request) -> Response:
+def delete_contact_page(request: Request) -> Response:
     return templates.TemplateResponse(
-        "contacts/delete/delete_user.html",
+        "contacts/delete/delete_contact.html",
         {"request": request},
         status_code=status.HTTP_200_OK,
     )
 
 @router.post("/api/contacts/delete", name="api_contacts_delete")
-def delete_user(
+def delete_contact(
     request: Request,
     id_1: int = Form(...),
     session: Session = Depends(get_session),
+    current_account: Account = Depends(get_current_contact)
+
 ) -> Response:
-    user_repo = ur.ContactRepository(session)
-    success = user_repo.delete_by_id(Contact, id_1)
+    contact_repo = ur.ContactRepository(session)
+
+    success = contact_repo.delete_by_id_and_owner(
+        Contact,
+        contact_id=id_1,
+        owner_id=current_account.id,
+    )
+
     status_code = status.HTTP_200_OK if success else status.HTTP_404_NOT_FOUND
 
     return templates.TemplateResponse(
@@ -82,8 +99,8 @@ def get_all_contacts(
         request: Request,
         session: Session = Depends(get_session)
 ) -> Response:
-    user_repo = ur.ContactRepository(session)
-    contacts = user_repo.get_all(Contact)
+    contact_repo = ur.ContactRepository(session)
+    contacts = contact_repo.get_all(Contact)
     return templates.TemplateResponse(
         "contacts/show_contacts.html",
         {"request": request, "contacts": contacts},
@@ -94,24 +111,24 @@ def get_all_contacts(
 def get_contacts_json(
         session: Session = Depends(get_session)
 ) -> JSONResponse:
-    user_repo = ur.ContactRepository(session)
-    contacts = user_repo.get_all(Contact)
+    contact_repo = ur.ContactRepository(session)
+    contacts = contact_repo.get_all(Contact)
     contacts_data = [
         {
-            "id": u.id,
-            "name": u.name,
-            "email": u.email,
-            "date_of_birth": u.date_of_birth.isoformat(),
+            "id": c.id,
+            "name": c.name,
+            "email": c.email,
+            "date_of_birth": c.date_of_birth.isoformat(),
         }
-        for u in contacts
-    ]
+        for c in contacts
+            ]
     return JSONResponse(content=contacts_data)
 
 ####################################################################### Filtering Endpoints
 @router.get("/pages/filters/menu", name="filters_menu_page")
 def filter_page(request: Request) -> Response:
     return templates.TemplateResponse(
-        "filters/contacts_filter_page.html",
+        "contacts/filters/contacts_filter_page.html",
         {"request": request},
         status_code=status.HTTP_200_OK,
     )
@@ -138,8 +155,8 @@ def contacts_above_show(
         age: int = Form(...),
         session: Session = Depends(get_session),
 ) -> Response:
-    user_repo = ur.ContactRepository(session)
-    contacts = user_repo.get_contacts_above_age(Contact, age)
+    contact_repo = ur.ContactRepository(session)
+    contacts = contact_repo.get_contacts_above_age(Contact, age)
     return templates.TemplateResponse(
         "contacts/filters/contacts_filter_result.html",
         {"request": request, "age": age, "contacts": contacts},
@@ -153,10 +170,30 @@ def contacts_between_show(
         max_age: int = Form(...),
         session: Session = Depends(get_session),
 ) -> Response:
-    user_repo = ur.ContactRepository(session)
-    contacts = user_repo.get_contacts_between_age(Contact, min_age, max_age)
+    contact_repo = ur.ContactRepository(session)
+    contacts = contact_repo.get_contacts_between_age(Contact, min_age, max_age)
     return templates.TemplateResponse(
         "contacts/filters/contacts_filter_result.html",
         {"request": request, "min_age": min_age, "max_age": max_age, "contacts": contacts},
         status_code=status.HTTP_200_OK,
     )
+
+
+@router.get("/api/debug/contacts", name="debug_contacts_all")
+def debug_contacts_all(
+    session: Session = Depends(get_session),
+) -> JSONResponse:
+    contact_repo = ur.ContactRepository(session)
+    contacts = contact_repo.get_all(Contact)
+
+    data = [
+        {
+            "id": c.id,
+            "name": c.name,
+            "email": c.email,
+            "date_of_birth": c.date_of_birth.isoformat(),
+            "owner_id": c.owner_id,
+        }
+        for c in contacts
+    ]
+    return JSONResponse(content=data)

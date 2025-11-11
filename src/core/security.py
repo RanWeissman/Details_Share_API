@@ -4,8 +4,12 @@ import os
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 
-from fastapi import HTTPException, Request, status
+from fastapi import Depends, HTTPException, Request, status
+from sqlmodel import Session
 
+from src.core.deps import get_session
+from src.database.account_repository import AccountsRepository
+from src.models.account import Account
 
 _pwd = CryptContext(schemes=["argon2"], deprecated="auto")
 
@@ -28,11 +32,13 @@ def create_access_token(sub: str, extra: dict = None, minutes: int = None) -> st
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
 
-def get_current_user(request: Request) -> dict:
-    """
-    Dependency: מאמת JWT שמגיע מה-cookie בשם 'access_token'.
-    אם אין / לא תקין / פג תוקף -> redirect לדף login.
-    """
+
+
+def get_current_contact(
+    request: Request,
+    session: Session = Depends(get_session),
+) -> Account:
+
     token = request.cookies.get("access_token")
     if not token:
         raise HTTPException(
@@ -50,4 +56,29 @@ def get_current_user(request: Request) -> dict:
             headers={"Location": "/pages/account/login"},
         )
 
-    return payload
+    # נשלף ה-id ששמת ב-extra בזמן היצירה של הטוקן
+    contact_id = payload.get("id")
+    if contact_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_303_SEE_OTHER,
+            detail="Invalid token payload",
+            headers={"Location": "/pages/account/login"},
+        )
+
+    # מביאים את המשתמש מה-DB
+    repo = AccountsRepository(session)
+    contact = repo.get_by_id(contact_id)
+
+    if not contact or not contact.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_303_SEE_OTHER,
+            detail="contact inactive or not found",
+            headers={"Location": "/pages/account/login"},
+        )
+
+    # כאן contact הוא אובייקט Account אמיתי
+    return contact
+
+
+def auth_required(current_contact: Account = Depends(get_current_contact)) -> None:
+    return None

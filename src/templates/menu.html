@@ -12,63 +12,63 @@
     <div style="display:inline-flex; gap:16px;">
 
          <a href="{{ request.url_for('api_contacts_show_all') }}">
-            <button style="padding:10px 18px; cursor:pointer;">Show All Users</button>
+            <button style="padding:10px 18px; cursor:pointer;">Show All Contacts</button>
         </a>
 
         <a href="{{ request.url_for('contacts_create_page') }}">
-            <button style="padding:10px 18px; cursor:pointer;">Add User</button>
+            <button style="padding:10px 18px; cursor:pointer;">Add Contact</button>
         </a>
 
        <a href="{{ request.url_for('contacts_delete_page') }}">
-            <button style="padding:10px 18px; cursor:pointer;">Delete User</button>
+            <button style="padding:10px 18px; cursor:pointer;">Delete Contact</button>
        </a>
 
         <a href="{{ request.url_for('filters_menu_page') }}">
-            <button style="padding:10px 18px; cursor:pointer;">Filter Users</button>
+            <button style="padding:10px 18px; cursor:pointer;">Filter Contacts</button>
         </a>
 
-        <button id="loadUsersBtn" style="padding:10px 18px; cursor:pointer;">
-            Show All Users (via API)
+        <button id="loadContactsBtn" style="padding:10px 18px; cursor:pointer;">
+            Show All Contacts (via API)
         </button>
 
     </div>
 
-    <div id="usersSection" style="display:none; margin-top:20px;">
+    <div id="contactsSection" style="display:none; margin-top:20px;">
 
-        <h2>All Users (from API):</h2>
+        <h2>All Contacts (from API):</h2>
 
-        <ul id="userList" style="list-style:none; padding:0;"></ul>
+        <ul id="contactList" style="list-style:none; padding:0;"></ul>
     </div>
 
     <script>
           const API_URL = "http://127.0.0.1:8000";
 
-          document.getElementById("loadUsersBtn").addEventListener("click", async () => {
-            const section = document.getElementById("usersSection");
-            const list = document.getElementById("userList");
+          document.getElementById("loadContactsBtn").addEventListener("click", async () => {
+            const section = document.getElementById("contactsSection");
+            const list = document.getElementById("contactList");
 
             list.innerHTML = "<li>Loading...</li>";
             section.style.display = "block";
 
             try {
-              const res = await fetch(API_URL + "/api/contact/all");
+              const res = await fetch(API_URL + "/api/contacts/all");
               if (!res.ok) throw new Error("Failed to load contacts");
-              const users = await res.json();
+              const contacts = await res.json();
 
-              if (users.length === 0) {
+              if (contacts.length === 0) {
                 list.innerHTML = "<li>No contacts found.</li>";
                 return;
               }
 
               list.innerHTML = "";
-              users.forEach(user => {
+              contacts.forEach(contact => {
                 const li = document.createElement("li");
                 li.innerHTML = `
                   <div style="margin-bottom:10px;">
-                    <b>ID:</b> ${user.id} —
-                    <b>Name:</b> ${user.name} —
-                    <b>Email:</b> ${user.email} —
-                    <b>Date of Birth:</b> ${user.date_of_birth}
+                    <b>ID:</b> ${contact.id} —
+                    <b>Name:</b> ${contact.name} —
+                    <b>Email:</b> ${contact.email} —
+                    <b>Date of Birth:</b> ${contact.date_of_birth}
 
                   </div>
                 `;

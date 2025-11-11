@@ -8,3 +8,4 @@ class Contact(SQLModel, table=True):
     date_of_birth: date
     is_active: bool = Field(default=True)
     created_at: date = Field(default_factory=date.today)
+    owner_id: int
