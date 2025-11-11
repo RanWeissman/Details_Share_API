@@ -10,13 +10,13 @@ from starlette.middleware.base import RequestResponseEndpoint
 from starlette.responses import Response
 from fastapi.responses import HTMLResponse
 
-from src import app_logging as ap
+from src import app_logging
 from src.api.contacts import router as contacts_router
 from src.api.accounts import router as accounts_router
 
 ####################################################################### Logging Configuration
-ap.configure_logging()
-logger = ap.get_logger("main logger: ")
+app_logging.configure_logging()
+logger = app_logging.get_logger("main logger: ")
 ####################################################################### Lifespan Event Handler
 @asynccontextmanager
 async def lifespan(_: FastAPI):

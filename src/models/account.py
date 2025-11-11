@@ -3,7 +3,6 @@ from sqlmodel import SQLModel, Field
 from datetime import date
 
 class Account(SQLModel, table=True):
-    __tablename__ = "account"
     id: int = Field(default=None, primary_key=True)
     username: str = Field(unique=True, index=True)
     email: str = Field(unique=True, index=True)
