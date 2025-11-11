@@ -14,16 +14,16 @@ from src.core.security import (
 from src.database.account_repository import AccountsRepository
 from src.models.account import Account
 
-router = APIRouter()
+accounts_router = APIRouter()
 ####################################################################### Home / Menu
-@router.get("/")
+@accounts_router.get("/")
 def show_homepage(request: Request) -> Response:
     return templates.TemplateResponse(
         "auth/homepage.html",
         {"request": request}
     )
 
-@router.get("/menu", name="menu_after_login")
+@accounts_router.get("/menu", name="menu_after_login")
 def menu_after_login(request: Request) -> Response:
     return templates.TemplateResponse(
         "menu.html",
@@ -31,7 +31,7 @@ def menu_after_login(request: Request) -> Response:
     )
 
 ####################################################################### Signup Endpoints
-@router.get("/pages/account/signup", name="account_create_page")
+@accounts_router.get("/pages/account/signup", name="account_create_page")
 def account_create_page(request: Request) -> Response:
     return templates.TemplateResponse(
         "auth/signup/signup.html",
@@ -39,7 +39,7 @@ def account_create_page(request: Request) -> Response:
         status_code=status.HTTP_200_OK,
     )
 
-@router.post("/api/account/signup", name="api_signup_create")
+@accounts_router.post("/api/account/signup", name="api_signup_create")
 def signup_account_results(
         request: Request,
         username: str = Form(...),
@@ -47,7 +47,7 @@ def signup_account_results(
         password: str = Form(...),
         session: Session = Depends(get_session)
 ) -> Response:
-    error = "User with this ID or Email already exists!"
+    error = "Account with this ID or Email already exists!"
     status_code = status.HTTP_400_BAD_REQUEST
 
     account_repo = AccountsRepository(session)
@@ -72,7 +72,7 @@ def signup_account_results(
     )
 
 ####################################################################### Login / Logout Endpoints
-@router.get("/pages/account/login", name="account_login_page")
+@accounts_router.get("/pages/account/login", name="account_login_page")
 def account_login_page(request: Request) -> Response:
     return templates.TemplateResponse(
         "auth/login/login.html",
@@ -80,7 +80,7 @@ def account_login_page(request: Request) -> Response:
         status_code=status.HTTP_200_OK,
     )
 
-@router.post("/api/account/login", name="api_account_login")
+@accounts_router.post("/api/account/login", name="api_account_login")
 def login(
     request: Request,
     username: str = Form(...),
@@ -111,7 +111,7 @@ def login(
     )
     return resp
 
-@router.post("/api/account/logout", name="api_account_logout")
+@accounts_router.post("/api/account/logout", name="api_account_logout")
 def logout():
     resp = HTMLResponse("Logged out")
     resp.delete_cookie("access_token", path="/")

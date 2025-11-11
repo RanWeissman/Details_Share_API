@@ -11,8 +11,8 @@ from starlette.responses import Response
 from fastapi.responses import HTMLResponse
 
 from src import app_logging
-from src.api.contacts import router as contacts_router
-from src.api.accounts import router as accounts_router
+from src.api.contacts import contacts_router
+from src.api.accounts import accounts_router
 
 ####################################################################### Logging Configuration
 app_logging.configure_logging()
@@ -29,6 +29,9 @@ async def lifespan(_: FastAPI):
         logger.info("Shutdown complete")
 ####################################################################### FastAPI App Initialization
 app = FastAPI(lifespan=lifespan)
+####################################################################### Include Routers
+app.include_router(accounts_router)
+app.include_router(contacts_router)
 ####################################################################### CORS Middleware Setup
 app.add_middleware(
     CORSMiddleware,
@@ -53,9 +56,7 @@ async def log_request_time(
     logger.info("%s %s took %s", request.method, request.url.path, formatted_time)
     response.headers["X-Process-Time"] = formatted_time
     return response
-####################################################################### Include Routers
-app.include_router(accounts_router)
-app.include_router(contacts_router)
+
 ####################################################################### Debugging Endpoints
 @app.get("/api/debug/routes")
 def debug_routes() -> HTMLResponse:

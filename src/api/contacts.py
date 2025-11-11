@@ -11,18 +11,18 @@ from src.database.contact_repository import ContactRepository
 from src.models.contact import Contact
 from src.models.account import Account
 
-router = APIRouter(
+contacts_router = APIRouter(
     dependencies=[Depends(auth_required)],
 )
 
-@router.get("/pages/contacts/create", name="contacts_create_page")
+@contacts_router.get("/pages/contacts/create", name="contacts_create_page")
 def create_contact_page(request: Request) -> Response:
     return templates.TemplateResponse(
         "contacts/add/contact_add.html",
         {"request": request}
     )
 
-@router.post("/api/contacts/create", name="api_contacts_create")
+@contacts_router.post("/api/contacts/create", name="api_contacts_create")
 def contacts_create(
         request: Request,
         name: str = Form(...),
@@ -63,7 +63,7 @@ def contacts_create(
         status_code=status_code,
     )
 
-@router.get("/pages/contacts/delete", name="contacts_delete_page")
+@contacts_router.get("/pages/contacts/delete", name="contacts_delete_page")
 def delete_contact_page(request: Request) -> Response:
     return templates.TemplateResponse(
         "contacts/delete/delete_contact.html",
@@ -71,7 +71,7 @@ def delete_contact_page(request: Request) -> Response:
         status_code=status.HTTP_200_OK,
     )
 
-@router.post("/api/contacts/delete", name="api_contacts_delete")
+@contacts_router.post("/api/contacts/delete", name="api_contacts_delete")
 def delete_contact(
     request: Request,
     id_1: int = Form(...),
@@ -95,7 +95,7 @@ def delete_contact(
         status_code=status_code,
     )
 
-@router.get("/pages/contacts/all", name="api_contacts_show_all")
+@contacts_router.get("/pages/contacts/all", name="api_contacts_show_all")
 def get_all_contacts(
         request: Request,
         session: Session = Depends(get_session)
@@ -108,7 +108,7 @@ def get_all_contacts(
         status_code=status.HTTP_200_OK,
     )
 
-@router.get("/api/contacts/all", name="json_contacts_show_all")
+@contacts_router.get("/api/contacts/all", name="json_contacts_show_all")
 def get_contacts_json(
         session: Session = Depends(get_session)
 ) -> JSONResponse:
@@ -126,7 +126,7 @@ def get_contacts_json(
     return JSONResponse(content=contacts_data)
 
 ####################################################################### Filtering Endpoints
-@router.get("/pages/filters/menu", name="filters_menu_page")
+@contacts_router.get("/pages/filters/menu", name="filters_menu_page")
 def filter_page(request: Request) -> Response:
     return templates.TemplateResponse(
         "contacts/filters/contacts_filter_page.html",
@@ -134,7 +134,7 @@ def filter_page(request: Request) -> Response:
         status_code=status.HTTP_200_OK,
     )
 
-@router.get("/pages/filters/age/above", name="filter_age_above_page")
+@contacts_router.get("/pages/filters/age/above", name="filter_age_above_page")
 def contacts_above_page(request: Request) -> Response:
     return templates.TemplateResponse(
         "contacts/filters/filter_contacts_age_above.html",
@@ -142,7 +142,7 @@ def contacts_above_page(request: Request) -> Response:
         status_code=status.HTTP_200_OK,
     )
 
-@router.get("/pages/filters/age/between", name="filter_age_between_page")
+@contacts_router.get("/pages/filters/age/between", name="filter_age_between_page")
 def contacts_between_page(request: Request) -> Response:
     return templates.TemplateResponse(
         "contacts/filters/filter_contacts_age_between.html",
@@ -150,7 +150,7 @@ def contacts_between_page(request: Request) -> Response:
         status_code=status.HTTP_200_OK,
     )
 
-@router.post("/api/filters/age/above", name="api_age_above")
+@contacts_router.post("/api/filters/age/above", name="api_age_above")
 def contacts_above_show(
         request: Request,
         age: int = Form(...),
@@ -164,7 +164,7 @@ def contacts_above_show(
         status_code=status.HTTP_200_OK,
     )
 
-@router.post("/api/filters/age/between", name="api_age_between")
+@contacts_router.post("/api/filters/age/between", name="api_age_between")
 def contacts_between_show(
         request: Request,
         min_age: int = Form(...),
@@ -180,7 +180,7 @@ def contacts_between_show(
     )
 
 
-@router.get("/api/debug/contacts", name="debug_contacts_all")
+@contacts_router.get("/api/debug/contacts", name="debug_contacts_all")
 def debug_contacts_all(
     session: Session = Depends(get_session),
 ) -> JSONResponse:
