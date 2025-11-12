@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Delete Result</title>
+    </head>
+    <body style="font-family:sans-serif; text-align:center; margin-top:50px;">
+        {% if success %}
+            <h1 style="color:green;">✅ User ID {{ id }} was successfully deleted!</h1>
+        {% else %}
+            <h1 style="color:red;">❌ User ID {{ id }} not found.</h1>
+        {% endif %}
+
+        <br>
+        <a href="/menu">Back to Home Page</a>
+    </body>
+</html>

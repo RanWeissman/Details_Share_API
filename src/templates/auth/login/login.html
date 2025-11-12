@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login</title>
+  <style>
+    body {
+      text-align: center;
+      margin-top: 80px;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+    form {
+      display: inline-block;
+      text-align: left;
+      padding: 16px 20px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
+    label { display: inline-block; width: 130px; margin-bottom: 6px; }
+    input { padding: 6px 8px; width: 240px; }
+    .row { margin-bottom: 12px; }
+    button { padding: 8px 14px; cursor: pointer; }
+    a { display: inline-block; margin-top: 16px; }
+  </style>
+</head>
+<body>
+
+  <h2>Login</h2>
+
+  <form action="{{ request.url_for('api_account_login') }}" method="post">
+    <div class="row">
+      <label for="username">Username:</label>
+      <input id="username" type="text" name="username" required>
+    </div>
+
+    <div class="row">
+      <label for="password">Password:</label>
+      <input id="password" type="password" name="password" required>
+    </div>
+
+    <div class="row" style="text-align:right;">
+      <button type="submit">Sign In</button>
+    </div>
+  </form>
+
+  <br>
+  <a href="/">⬅ Back to Home Page</a>
+  <br>
+  <a href="{{ request.url_for('account_create_page') }}">Create an account</a>
+
+</body>
+</html>

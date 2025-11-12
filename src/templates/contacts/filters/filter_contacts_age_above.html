@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Get Users Above Age</title>
+    </head>
+    <body style="text-align:center; font-family:sans-serif; margin-top:50px;">
+        <h2>Enter Minimum Age</h2>
+
+        <form action="{{ request.url_for('api_age_above') }}" method="post">
+            <label for="age">Enter Min Age</label><br>
+            <input id="age" type="number" name="age" placeholder="Enter age" min="0" required>
+            <br><br>
+            <button type="submit">Show Users</button>
+        </form>
+
+        <br>
+        <a href="/menu">⬅ Back to Home Page</a>
+    </body>
+</html>

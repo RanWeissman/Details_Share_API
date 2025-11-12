@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+      <meta charset="UTF-8">
+      <title>All Users</title>
+       <style>
+          body {
+              font-family: sans-serif;
+              text-align: center;
+
+          }
+
+          table {
+              margin: 0 auto;
+              min-width: 60%;
+          }
+
+          }
+      </style>
+  </head>
+  <body>
+
+    <h2>All Contacts</h2>
+
+    {% if contacts and contacts|length > 0 %}
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Date of Birth</th>
+        </tr>
+
+        {% for contact in contacts %}
+        <tr>
+            <td>{{ contact.id }}</td>
+            <td>{{ contact.name }}</td>
+            <td>{{ contact.email }}</td>
+            <td>{{ contact.date_of_birth }}</td>
+        </tr>
+        {% endfor %}
+
+    </table>
+    {% else %}
+    <p>No contacts found.</p>
+    {% endif %}
+
+    <br>
+    <a href="/menu">⬅ Back to Home Page</a>
+  </body>
+</html>

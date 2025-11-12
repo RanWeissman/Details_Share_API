@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Users Filter</title>
+</head>
+<body style="font-family:sans-serif; text-align:center; margin-top:40px;">
+    <h2>👥 Users Filter</h2>
+
+    {% if contacts %}
+        <table style="margin:auto; border-collapse:collapse; border:1px solid #ccc;">
+            <tr style="background-color:#f0f0f0;">
+                <th style="border:1px solid #ccc;">ID</th>
+                <th style="border:1px solid #ccc;">Name</th>
+                <th style="border:1px solid #ccc;">Email</th>
+                <th style="border:1px solid #ccc;">Date of Birth</th>
+            </tr>
+            {% for contact in contacts %}
+                <tr>
+                    <td style="border:1px solid #ccc;">{{ contact.id }}</td>
+                    <td style="border:1px solid #ccc;">{{ contact.name }}</td>
+                    <td style="border:1px solid #ccc;">{{ contact.email }}</td>
+                    <td style="border:1px solid #ccc;">{{ contact.date_of_birth }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p style="color:gray;">No contacts found for this filter.</p>
+    {% endif %}
+
+    <br>
+    <a href="/menu" style="text-decoration:none;">⬅ Back to Home</a>
+</body>
+</html>
