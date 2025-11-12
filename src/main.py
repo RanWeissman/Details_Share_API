@@ -21,16 +21,7 @@ logger = app_logging.get_logger("main logger: ")
 ####################################################################### Lifespan Event Handler
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    logger.info("DB initialize - This is how we do it !!")
-    # ensure DB singleton is created at startup so tables are ready
-    try:
-        db_core = import_module("src.database.db_core")
-        # create singleton if not already created
-        if not getattr(db_core.DBCore, "_instance", False):
-            db_core.DBCore()
-    except Exception as e:
-        logger.exception("Failed to initialize DB: %s", e)
-
+    # keep lifespan lightweight — do not initialize DB here; run_server will do it
     base = os.getenv("PUBLIC_BASE_URL", "http://127.0.0.1:8000")
     logger.info(f"App is running at {base} (docs: {base}/docs)")
     try:
