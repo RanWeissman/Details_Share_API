@@ -1,15 +1,15 @@
-from typing import Generator
+from typing import Iterator
 
 from fastapi.templating import Jinja2Templates
 from sqlmodel import Session
 
-from src.database import db_core as db_module
+from src.database import db_core
 
 templates = Jinja2Templates(directory="src/templates")
 
-db = db_module.DBCore()
+db = db_core.DBCore()
 
-def get_session() -> Generator[Session, None, None]:
+def get_session() -> Iterator[Session]:
     s = db.get_session()
     try:
         yield s

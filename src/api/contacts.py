@@ -5,14 +5,14 @@ from fastapi.responses import JSONResponse
 from sqlmodel import Session
 from starlette.responses import Response
 
-from src.core.deps import get_session, templates
-from src.core.security import auth_required, get_current_contact
+from src.core.api_globals import templates, security
+from src.core.db_global import get_session
 from src.database.contact_repository import ContactRepository
 from src.models.contact import Contact
 from src.models.account import Account
 
 contacts_router = APIRouter(
-    dependencies=[Depends(auth_required)],
+    dependencies=[Depends(security.auth_required)],
 )
 
 @contacts_router.get("/pages/contacts/create", name="contacts_create_page")
@@ -30,14 +30,14 @@ def contacts_create(
         id_1: int = Form(...),
         date_of_birth: date = Form(...),
         session: Session = Depends(get_session),
-        current_account: Account = Depends(get_current_contact)
+        current_account: Account = Depends(security.get_current_contact)
 ) -> Response:
     error = "Contact with this ID or Email already exists!"
     status_code = status.HTTP_400_BAD_REQUEST
     contact_repo = ContactRepository(session)
     email_norm = email.strip().casefold()
 
-    if not contact_repo.check_id_and_email(Contact, id_1, email):  # if not exists
+    if not contact_repo.check_id_and_email(id_1, email):  # if not exists
         contact = Contact(
             id=id_1,
             name=name,
@@ -76,13 +76,12 @@ def delete_contact(
     request: Request,
     id_1: int = Form(...),
     session: Session = Depends(get_session),
-    current_account: Account = Depends(get_current_contact)
+    current_account: Account = Depends(security.get_current_contact)
 
 ) -> Response:
     contact_repo = ContactRepository(session)
 
     success = contact_repo.delete_by_id_and_owner(
-        Contact,
         contact_id=id_1,
         owner_id=current_account.id,
     )
@@ -101,7 +100,7 @@ def get_all_contacts(
         session: Session = Depends(get_session)
 ) -> Response:
     contact_repo = ContactRepository(session)
-    contacts = contact_repo.get_all(Contact)
+    contacts = contact_repo.get_all()
     return templates.TemplateResponse(
         "contacts/show_contacts.html",
         {"request": request, "contacts": contacts},
@@ -113,7 +112,7 @@ def get_contacts_json(
         session: Session = Depends(get_session)
 ) -> JSONResponse:
     contact_repo = ContactRepository(session)
-    contacts = contact_repo.get_all(Contact)
+    contacts = contact_repo.get_all()
     contacts_data = [
         {
             "id": c.id,
@@ -157,7 +156,7 @@ def contacts_above_show(
         session: Session = Depends(get_session),
 ) -> Response:
     contact_repo = ContactRepository(session)
-    contacts = contact_repo.get_contacts_above_age(Contact, age)
+    contacts = contact_repo.get_contacts_above_age(age)
     return templates.TemplateResponse(
         "contacts/filters/contacts_filter_result.html",
         {"request": request, "age": age, "contacts": contacts},
@@ -172,7 +171,7 @@ def contacts_between_show(
         session: Session = Depends(get_session),
 ) -> Response:
     contact_repo = ContactRepository(session)
-    contacts = contact_repo.get_contacts_between_age(Contact, min_age, max_age)
+    contacts = contact_repo.get_contacts_between_age(min_age, max_age)
     return templates.TemplateResponse(
         "contacts/filters/contacts_filter_result.html",
         {"request": request, "min_age": min_age, "max_age": max_age, "contacts": contacts},
@@ -185,7 +184,7 @@ def debug_contacts_all(
     session: Session = Depends(get_session),
 ) -> JSONResponse:
     contact_repo = ContactRepository(session)
-    contacts = contact_repo.get_all(Contact)
+    contacts = contact_repo.get_all()
 
     data = [
         {

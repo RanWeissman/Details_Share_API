@@ -5,18 +5,14 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlmodel import Session
 from starlette.responses import Response
 
-from src.core.deps import get_session, templates
-from src.core.security import (
-    create_access_token,
-    get_password_hash,
-    verify_password,
-)
+from src.core.api_globals import templates, security
+from src.core.db_global import get_session
+
 from src.database.account_repository import AccountsRepository
-from src.models.account import Account
 
 accounts_router = APIRouter()
 ####################################################################### Home / Menu
-@accounts_router.get("/")
+@accounts_router.get("/", name="show_homepage")
 def show_homepage(request: Request) -> Response:
     return templates.TemplateResponse(
         "auth/homepage.html",
@@ -53,9 +49,9 @@ def signup_account_results(
     account_repo = AccountsRepository(session)
     email_norm = email.strip().casefold()
     user_norm = username.strip().casefold()
-    hashed = get_password_hash(password)
+    hashed = security.get_password_hash(password)
 
-    if not account_repo.check_mail_and_username(Account, email_norm, user_norm):  # if not exists
+    if not account_repo.check_mail_and_username(email_norm, user_norm):  # if not exists
         account_repo.create_account(username=user_norm, email=email_norm, hashed_password=hashed)
         error = None
         status_code = status.HTTP_201_CREATED
@@ -91,13 +87,13 @@ def login(
     repo = AccountsRepository(session)
     acc = repo.get_by_username(user_norm)
 
-    if not acc or not verify_password(password, acc.hashed_password) or not acc.is_active:
+    if not acc or not security.verify_password(password, acc.hashed_password) or not acc.is_active:
         return templates.TemplateResponse(
             "auth/login/login_fail.html",
             {"request": request, "username": user_norm}
         )
 
-    token = create_access_token(sub=acc.email, extra={"id": acc.id, "role": str(acc.role)})
+    token = security.create_access_token(sub=acc.email, extra={"id": acc.id, "role": str(acc.role)})
     success_target = request.url_for("menu_after_login")
     resp = RedirectResponse(url=str(success_target), status_code=status.HTTP_303_SEE_OTHER)
     resp.set_cookie(
@@ -111,8 +107,10 @@ def login(
     )
     return resp
 
-@accounts_router.post("/api/account/logout", name="api_account_logout")
-def logout():
-    resp = HTMLResponse("Logged out")
+@accounts_router.get("/account/logout", name="logout_account")
+def logout_account(request: Request) -> Response:
+    login_url = request.url_for("show_homepage")
+    resp = RedirectResponse(url=str(login_url), status_code=status.HTTP_303_SEE_OTHER)
     resp.delete_cookie("access_token", path="/")
     return resp
+

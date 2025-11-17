@@ -5,6 +5,25 @@
       <title>Home Page</title>
   </head>
   <body style="font-family:sans-serif; text-align:center; margin-top:60px;">
+
+    <!-- Logout בפינה שמאלית עליונה -->
+    <div style="position:fixed; top:10px; left:10px;">
+        <a href="{{ request.url_for('logout_account') }}">
+            <button
+              style="
+                padding:8px 16px;
+                cursor:pointer;
+                background-color:#e74c3c;
+                color:white;
+                border:none;
+                border-radius:4px;
+              "
+            >
+              Logout
+            </button>
+        </a>
+    </div>
+
     <h1>Welcome</h1>
 
     <p>Choose Act:</p>
@@ -69,7 +88,6 @@
                     <b>Name:</b> ${contact.name} —
                     <b>Email:</b> ${contact.email} —
                     <b>Date of Birth:</b> ${contact.date_of_birth}
-
                   </div>
                 `;
                 list.appendChild(li);
