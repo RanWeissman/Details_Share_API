@@ -1,7 +1,7 @@
 import os
 
 from fastapi import APIRouter, Depends, Form, Request, status
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import RedirectResponse
 from sqlmodel import Session
 from starlette.responses import Response
 

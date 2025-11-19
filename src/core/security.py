@@ -70,7 +70,7 @@ class Security:
 
         try:
             cid = int(contact_id)
-        except Exception:
+        except (TypeError, ValueError):
             cid = contact_id
 
         repo = AccountsRepository(session)

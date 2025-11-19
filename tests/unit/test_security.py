@@ -152,7 +152,7 @@ def test_auth_required_does_nothing_when_current_contact_provided(security: Secu
     )
 
     # Method should simply return None and not raise
-    result = security.auth_required(current_contact=dummy_account)
+    result = security.auth_required(current_contact=dummy_account) #ignire: ignore
 
     assert result is None
 

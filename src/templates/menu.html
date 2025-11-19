@@ -71,7 +71,12 @@
 
             try {
               const res = await fetch(API_URL + "/api/contacts/all");
-              if (!res.ok) throw new Error("Failed to load contacts");
+
+              if (!res.ok) {
+                list.innerHTML = `<li style="color:red;">Error: Failed to load contacts</li>`;
+                return;
+              }
+
               const contacts = await res.json();
 
               if (contacts.length === 0) {
