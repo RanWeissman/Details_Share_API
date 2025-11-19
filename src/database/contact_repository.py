@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from datetime import date
 
 from dateutil.relativedelta import relativedelta
@@ -22,7 +22,7 @@ class ContactRepository:
         self.session.refresh(obj)
         return obj
 
-    def get_by_id(self, obj_id: int) -> None:
+    def get_by_id(self, obj_id: int) -> Optional[Contact]:
         return self.session.get(self.model, obj_id)
 
     def delete_by_id_and_owner(self, contact_id: int, owner_id: int) -> bool:
@@ -37,13 +37,6 @@ class ContactRepository:
         self.session.commit()
         return True
 
-    def delete_by_id(self, obj_id: int) -> bool:
-        db_obj = self.session.get(self.model, obj_id)
-        if not db_obj:
-            return False
-        self.session.delete(db_obj)
-        return True
-
     def get_all(self) -> List[Contact]:
         return list(self.session.exec(select(self.model)).all())
 
@@ -53,12 +46,9 @@ class ContactRepository:
         stmt = select(self.model).where(self.model.date_of_birth <= cutoff)
         return list(self.session.exec(stmt).all())
 
-    def get_contacts_between_age(
-        self, min_age: int, max_age: int
-    ) -> List[Contact]:
+    def get_contacts_between_age(self, min_age: int, max_age: int) -> List[Contact]:
         today = date.today()
         oldest_birth = today - relativedelta(years=max_age)
-
         youngest_birth = today - relativedelta(years=min_age)
 
         stmt = select(self.model).where(

@@ -43,12 +43,6 @@ class Security:
         return jwt.encode(payload, self._secret_key, algorithm=self._algorithm)
 
     def get_current_contact(self, request: Request, session: Session = Depends(get_session)) -> Account:
-        """FastAPI dependency: read token from cookie and return Account.
-
-        This method expects to be used as a dependency: FastAPI will provide
-        the `session` argument using Depends(get_session) when used via the
-        module-level wrapper below.
-        """
         token = request.cookies.get("access_token")
         if not token:
             raise HTTPException(
@@ -92,5 +86,4 @@ class Security:
         return contact
 
     def auth_required(self, current_contact: Account = Depends(get_session)) -> None:
-        return None
-
+        pass

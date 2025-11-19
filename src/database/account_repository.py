@@ -53,9 +53,6 @@ class AccountsRepository:
         ).first()
 
     def exists_username_or_email(self, username: str, email: str) -> bool:
-        """
-        בודק אם קיים חשבון עם אותו username או email.
-        """
         stmt = select(Account).where(
             (Account.username == username) | (Account.email == email)
         )

@@ -28,8 +28,12 @@ class DBCore:
             autocommit=False,
         )
         DBCore._instance = True
+
     def __del__(self) -> None:
-        self._engine.dispose()
+        engine = getattr(self, "_engine", None)
+        if engine is not None:
+            engine.dispose()
+
         DBCore._instance = False
 
     def get_session(self):

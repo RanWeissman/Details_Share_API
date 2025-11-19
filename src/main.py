@@ -61,7 +61,7 @@ async def log_request_time(
 
 @app.get("/favicon.ico", include_in_schema=False)
 async def favicon():
-    return FileResponse("static/favicon.ico")
+    return FileResponse("src/templates/static/favicon.ico")
 
 @app.get("/api/debug/routes")
 def debug_routes() -> HTMLResponse:

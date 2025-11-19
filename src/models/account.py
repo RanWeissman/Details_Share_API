@@ -1,4 +1,4 @@
-from src.models.role_enum import RoleEnum
+from src.models.role import Role
 from sqlmodel import SQLModel, Field
 from datetime import date
 
@@ -7,6 +7,6 @@ class Account(SQLModel, table=True):
     username: str = Field(unique=True, index=True)
     email: str = Field(unique=True, index=True)
     hashed_password: str
-    role: RoleEnum = Field(default=RoleEnum.user)
+    role: Role = Field(default=Role.user)
     created_at: date = Field(default_factory=date.today)
     is_active: bool = Field(default=True)
