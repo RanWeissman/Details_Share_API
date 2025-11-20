@@ -1,23 +1,22 @@
 from datetime import date
+from typing import Dict, Optional
 
 import pytest
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from sqlalchemy.pool import StaticPool
-from sqlmodel import SQLModel, Session, create_engine
+from sqlmodel import Session
 
-from src.main import app
+from src.main import app as fastapi_app
 from src.core.db_global import get_session
 from src.core.api_globals import security
 from src.models.contact import Contact
 from src.database.contact_repository import ContactRepository
 
+app: FastAPI = fastapi_app
+
 
 @pytest.fixture(autouse=True)
 def override_get_session(engine):
-    """
-    כל Depends(get_session) באפליקציה יחזיר Session חדש על אותו engine
-    שבו משתמשים בטסטים.
-    """
     def _get_session_override():
         with Session(engine) as session:
             yield session
@@ -29,12 +28,7 @@ def override_get_session(engine):
 
 @pytest.fixture(autouse=True)
 def override_auth_dependencies():
-    """
-    עוקף את מנגנון ה־auth כך שכל הטסטים ירוצו כאילו יש Account מחובר עם id=1.
-    """
-
     def fake_auth_required():
-        # לא עושה כלום, פשוט "מעביר" את הבקשה
         return None
 
     class FakeAccount:
@@ -58,10 +52,6 @@ def client():
     return TestClient(app)
 
 
-# =========================
-#  Helper
-# =========================
-
 def create_contact_in_db(
     engine,
     contact_id: int,
@@ -70,9 +60,6 @@ def create_contact_in_db(
     dob: date,
     owner_id: int = 1,
 ):
-    """
-    פונקציית עזר להזרקת Contact ישירות ל־DB של הטסטים.
-    """
     with Session(engine) as session:
         c = Contact(
             id=contact_id,
@@ -85,63 +72,51 @@ def create_contact_in_db(
         session.commit()
 
 
-# =========================
-#  Page endpoints tests
-# =========================
-
 def test_create_contact_page(client: TestClient):
-    resp = client.get("/pages/contacts/create")
-    assert resp.status_code == 200
-    # בודקים שיש HTML בסיסי של טופס
-    assert "<form" in resp.text
+    response = client.get("/pages/contacts/create")
+    assert response.status_code == 200
+    assert "<form" in response.text
 
 
 def test_delete_contact_page(client: TestClient):
-    resp = client.get("/pages/contacts/delete")
-    assert resp.status_code == 200
-    assert "Delete" in resp.text or "delete" in resp.text.lower()
+    response = client.get("/pages/contacts/delete")
+    assert response.status_code == 200
+    assert "Delete" in response.text or "delete" in response.text.lower()
 
 
 def test_filter_menu_page(client: TestClient):
-    resp = client.get("/pages/filters/menu")
-    assert resp.status_code == 200
-    assert "Filter" in resp.text or "filters" in resp.text
+    response = client.get("/pages/filters/menu")
+    assert response.status_code == 200
+    assert "Filter" in response.text or "filters" in response.text
 
 
 def test_filter_age_above_page(client: TestClient):
-    resp = client.get("/pages/filters/age/above")
-    assert resp.status_code == 200
-    assert "age" in resp.text.lower()
+    response = client.get("/pages/filters/age/above")
+    assert response.status_code == 200
+    assert "age" in response.text.lower()
 
 
 def test_filter_age_between_page(client: TestClient):
-    resp = client.get("/pages/filters/age/between")
-    assert resp.status_code == 200
-    assert "age" in resp.text.lower()
+    response = client.get("/pages/filters/age/between")
+    assert response.status_code == 200
+    assert "age" in response.text.lower()
 
-
-# =========================
-#  Create contact tests
-# =========================
 
 def test_contacts_create_creates_new_contact(client: TestClient, engine):
     data = {
         "name": "Alice",
         "email": "alice@example.com",
-        "id_1": 111,
+        "id_1": "111",
         "date_of_birth": "1990-01-01",
     }
 
-    resp = client.post("/api/contacts/create", data=data)
-    assert resp.status_code == 201
-    # בודקים שהתוצאה מכילה את הפרטים ב־HTML שהוחזר
-    assert "Alice" in resp.text
-    assert "alice@example.com" in resp.text
-    # לא בודקים כאן את ה־DB כדי לא להתנגש עם מנגנון ה־get_session הגלובלי.
+    response = client.post("/api/contacts/create", data=data)
+    assert response.status_code == 201
+    assert "Alice" in response.text
+    assert "alice@example.com" in response.text
 
 
 def test_contacts_create_duplicate_id_or_email_returns_error(client: TestClient, engine):
-    # קודם יוצרים contact ידני ב-DB
     create_contact_in_db(
         engine,
         contact_id=222,
@@ -151,26 +126,19 @@ def test_contacts_create_duplicate_id_or_email_returns_error(client: TestClient,
         owner_id=1,
     )
 
-    # עכשיו ננסה ליצור שוב עם אותו id / email
     data = {
         "name": "Bob 2",
-        "email": "bob@example.com",  # אותו email
-        "id_1": 222,                 # אותו id
+        "email": "bob@example.com",
+        "id_1": "222",
         "date_of_birth": "2000-01-01",
     }
 
-    resp = client.post("/api/contacts/create", data=data)
-    assert resp.status_code == 400
-    # הטקסט יכול להשתנות, אבל כרגע האפליקציה מחזירה את ההודעה הזאת:
-    assert "Contact with this ID or Email already exists" in resp.text
+    response = client.post("/api/contacts/create", data=data)
+    assert response.status_code == 400
+    assert "Contact with this ID or Email already exists" in response.text
 
-
-# =========================
-#  Get all / debug tests
-# =========================
 
 def test_get_all_contacts_page_shows_contacts(client: TestClient, engine):
-    # נכניס 2 אנשי קשר ל-DB
     create_contact_in_db(
         engine,
         contact_id=1,
@@ -186,9 +154,9 @@ def test_get_all_contacts_page_shows_contacts(client: TestClient, engine):
         dob=date(1985, 2, 2),
     )
 
-    resp = client.get("/pages/contacts/all")
-    assert resp.status_code == 200
-    body = resp.text
+    response = client.get("/pages/contacts/all")
+    assert response.status_code == 200
+    body = response.text
     assert "Alice" in body
     assert "Bob" in body
     assert "No contacts found" not in body
@@ -210,10 +178,10 @@ def test_debug_contacts_all_returns_json(client: TestClient, engine):
         dob=date(2000, 4, 4),
     )
 
-    resp = client.get("/api/debug/contacts")
-    assert resp.status_code == 200
+    response = client.get("/api/debug/contacts")
+    assert response.status_code == 200
 
-    data = resp.json()
+    data = response.json()
     assert isinstance(data, list)
     assert len(data) >= 2
     ids = {item["id"] for item in data}
@@ -222,10 +190,6 @@ def test_debug_contacts_all_returns_json(client: TestClient, engine):
 
 
 def test_get_contacts_json_returns_all_contacts(client: TestClient, engine):
-    """
-    מכסה את /api/contacts/all (json_contacts_show_all) –
-    בודק שה־JSON מכיל את אנשי הקשר מה-DB עם date_of_birth כ-ISO string.
-    """
     create_contact_in_db(
         engine,
         contact_id=1,
@@ -241,10 +205,10 @@ def test_get_contacts_json_returns_all_contacts(client: TestClient, engine):
         dob=date(1992, 2, 2),
     )
 
-    resp = client.get("/api/contacts/all")
-    assert resp.status_code == 200
+    response = client.get("/api/contacts/all")
+    assert response.status_code == 200
 
-    data = resp.json()
+    data = response.json()
     assert isinstance(data, list)
     assert len(data) >= 2
 
@@ -252,17 +216,11 @@ def test_get_contacts_json_returns_all_contacts(client: TestClient, engine):
     assert "jsonalice@example.com" in emails
     assert "jsonbob@example.com" in emails
 
-    # בודק ש-date_of_birth מוחזר בפורמט ISO (string)
-    for c in data:
-        assert isinstance(c["date_of_birth"], str)
+    for item in data:
+        assert isinstance(item["date_of_birth"], str)
 
-
-# =========================
-#  Delete tests
-# =========================
 
 def test_delete_contact_success_when_owned_by_current_account(client: TestClient, engine):
-    # current_account.id = 1 לפי ה-override
     create_contact_in_db(
         engine,
         contact_id=999,
@@ -272,17 +230,16 @@ def test_delete_contact_success_when_owned_by_current_account(client: TestClient
         owner_id=1,
     )
 
-    resp = client.post("/api/contacts/delete", data={"id_1": 999})
-    assert resp.status_code == 200
+    response = client.post("/api/contacts/delete", data={"id_1": "999"})
+    assert response.status_code == 200
 
     with Session(engine) as session:
         repo = ContactRepository(session)
         contacts = repo.get_all()
-        assert not any(c.id == 999 for c in contacts)
+        assert not any(contact.id == 999 for contact in contacts)
 
 
 def test_delete_contact_not_found_when_not_owned_by_current_account(client: TestClient, engine):
-    # איש קשר ששייך למישהו אחר (owner_id=2)
     create_contact_in_db(
         engine,
         contact_id=1000,
@@ -292,23 +249,19 @@ def test_delete_contact_not_found_when_not_owned_by_current_account(client: Test
         owner_id=2,
     )
 
-    resp = client.post("/api/contacts/delete", data={"id_1": 1000})
-    assert resp.status_code == 404
+    response = client.post("/api/contacts/delete", data={"id_1": "1000"})
+    assert response.status_code == 404
 
     with Session(engine) as session:
         repo = ContactRepository(session)
         contacts = repo.get_all()
-        assert any(c.id == 1000 for c in contacts)
+        assert any(contact.id == 1000 for contact in contacts)
 
-
-# =========================
-#  Filter logic tests (age)
-# =========================
 
 def test_contacts_above_show_uses_repo_and_renders_result(client: TestClient, monkeypatch):
-    called = {"age": None}
+    called: Dict[str, Optional[int]] = {"age": None}
 
-    def fake_get_contacts_above_age(self, age: int):
+    def fake_get_contacts_above_age(_self, age: int):
         called["age"] = age
         return [
             Contact(
@@ -320,7 +273,6 @@ def test_contacts_above_show_uses_repo_and_renders_result(client: TestClient, mo
             )
         ]
 
-    # מחליפים את המתודה בקלאס של הרפוזיטורי
     monkeypatch.setattr(
         ContactRepository,
         "get_contacts_above_age",
@@ -328,19 +280,17 @@ def test_contacts_above_show_uses_repo_and_renders_result(client: TestClient, mo
         raising=True,
     )
 
-    resp = client.post("/api/filters/age/above", data={"age": 30})
-    assert resp.status_code == 200
-    # בדיקה שהרפוזיטורי נקרא עם הגיל הנכון
+    response = client.post("/api/filters/age/above", data={"age": "30"})
+    assert response.status_code == 200
     assert called["age"] == 30
-    body = resp.text
-    # בדיקה שהשם שהחזיר ה־fake_repo מופיע ב־HTML
+    body = response.text
     assert "Old Alice" in body
 
 
 def test_contacts_between_show_uses_repo_and_renders_result(client: TestClient, monkeypatch):
-    called = {"min_age": None, "max_age": None}
+    called: Dict[str, Optional[int]] = {"min_age": None, "max_age": None}
 
-    def fake_get_contacts_between_age(self, min_age: int, max_age: int):
+    def fake_get_contacts_between_age(_self, min_age: int, max_age: int):
         called["min_age"] = min_age
         called["max_age"] = max_age
         return [
@@ -360,14 +310,12 @@ def test_contacts_between_show_uses_repo_and_renders_result(client: TestClient, 
         raising=True,
     )
 
-    resp = client.post(
+    response = client.post(
         "/api/filters/age/between",
-        data={"min_age": 20, "max_age": 40},
+        data={"min_age": "20", "max_age": "40"},
     )
-    assert resp.status_code == 200
-    # בדיקה שהפונקציה נקראה עם ערכי המינימום והמקסימום הנכונים
+    assert response.status_code == 200
     assert called["min_age"] == 20
     assert called["max_age"] == 40
-    body = resp.text
-    # בדיקה שהשם שחזר מה־fake_repo מופיע בדף
+    body = response.text
     assert "Mid Bob" in body

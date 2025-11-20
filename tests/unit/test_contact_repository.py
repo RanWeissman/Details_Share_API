@@ -5,7 +5,6 @@ from sqlmodel import Session
 from src.models.contact import Contact
 from src.database.contact_repository import ContactRepository
 
-# ---------- Helpers ----------
 
 def make_contact(
     id_: int,
@@ -25,7 +24,6 @@ def make_contact(
     )
 
 
-# ---------- Tests: add and get_by_id ----------
 def test_add_returned_and_get_by_id(contact_repo: ContactRepository, session: Session):
     today = date.today()
     id_1 = 1
@@ -50,7 +48,7 @@ def test_add_returned_and_get_by_id(contact_repo: ContactRepository, session: Se
     assert from_db.email == email_1
     assert from_db.owner_id == owner_id_1
 
-# ---------- Tests: check_id_and_email ----------
+
 def test_check_id_and_email_true_if_id_exists(contact_repo: ContactRepository):
     today = date.today()
     same_id = 1
@@ -87,7 +85,6 @@ def test_check_id_and_email_false_if_not_exists(contact_repo: ContactRepository)
     exists = contact_repo.check_id_and_email(id_1=123, email_norm="none@example.com")
     assert exists is False
 
-# ---------- Tests: get_all ----------
 def test_get_all_returns_all_contacts(contact_repo: ContactRepository):
     today = date.today()
     c1 = make_contact(1, "C1", "c1@example.com", today, owner_id=1)
@@ -105,7 +102,6 @@ def test_get_all_returns_all_contacts(contact_repo: ContactRepository):
     assert ids == {1, 2, 3}
 
 
-# ---------- Tests: delete_by_id_and_owner ----------
 def test_delete_by_id_not_same_owner(contact_repo: ContactRepository, session: Session):
     today = date.today()
     same_id = 1
@@ -146,11 +142,9 @@ def test_delete_by_id_and_owner_non_existing(contact_repo: ContactRepository):
     assert deleted is False
 
 
-# ---------- Tests: age filters ----------
 def test_get_contacts_above_age(contact_repo: ContactRepository):
     today = date.today()
     owner_id = 1
-    # ages: ~30, ~20, ~10
     c30 = make_contact(
         id_=1,
         name="C30",
@@ -177,7 +171,7 @@ def test_get_contacts_above_age(contact_repo: ContactRepository):
     contact_repo.add(c20)
     contact_repo.add(c10)
 
-    result = contact_repo.get_contacts_above_age(age=18) # above 18 -> 30 and 20
+    result = contact_repo.get_contacts_above_age(age=18)
     ids = {c.id for c in result}
 
     assert ids == {1, 2}
@@ -187,7 +181,6 @@ def test_get_contacts_between_age(contact_repo: ContactRepository):
     today = date.today()
     owner_id = 1
 
-    # ages ~40, ~25, ~15
     c40 = make_contact(
         id_=1,
         name="C40",
@@ -214,7 +207,6 @@ def test_get_contacts_between_age(contact_repo: ContactRepository):
     contact_repo.add(c25)
     contact_repo.add(c15)
 
-    # select contacts with age between 18 and 30 -> only ~25 years old
     result = contact_repo.get_contacts_between_age(min_age=18, max_age=30)
     ids = {c.id for c in result}
 

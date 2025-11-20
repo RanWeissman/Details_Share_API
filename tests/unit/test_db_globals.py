@@ -30,7 +30,6 @@ class FakeDBCore:
         return self.session
 
 
-# ---------- Tests ----------
 def test_get_session_happy_path_commits_and_closes(monkeypatch):
     fake_db = FakeDBCore()
     monkeypatch.setattr(db_global, "db", fake_db)

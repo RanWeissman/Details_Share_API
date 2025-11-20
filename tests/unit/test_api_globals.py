@@ -15,7 +15,6 @@ def test_templates_is_jinja2templates_instance():
     assert isinstance(api_globals.templates, Jinja2Templates)
     loader = api_globals.templates.env.loader
 
-    # Jinja2 FileSystemLoader uses "searchpath"
     if hasattr(loader, "searchpath"):
         search_paths = [os.path.normpath(str(p)) for p in loader.searchpath]
     else:
