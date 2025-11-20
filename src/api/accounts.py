@@ -14,24 +14,21 @@ accounts_router = APIRouter()
 ####################################################################### Home / Menu
 @accounts_router.get("/", name="show_homepage")
 def show_homepage(request: Request) -> Response:
-    return templates.TemplateResponse(
-        "auth/homepage.html",
-        {"request": request}
+    return templates.TemplateResponse(request,
+        "auth/homepage.html"
     )
 
 @accounts_router.get("/menu", name="menu_after_login")
 def menu_after_login(request: Request) -> Response:
-    return templates.TemplateResponse(
-        "menu.html",
-        {"request": request}
+    return templates.TemplateResponse(request,
+        "menu.html"
     )
 
 ####################################################################### Signup Endpoints
 @accounts_router.get("/pages/account/signup", name="account_create_page")
 def account_create_page(request: Request) -> Response:
-    return templates.TemplateResponse(
+    return templates.TemplateResponse(request,
         "auth/signup/signup.html",
-        {"request": request},
         status_code=status.HTTP_200_OK,
     )
 
@@ -57,9 +54,9 @@ def signup_account_results(
         status_code = status.HTTP_201_CREATED
 
     return templates.TemplateResponse(
+        request,
         "auth/signup/signup_result.html",
         {
-            "request": request,
             "error": error,
             "username": user_norm,
             "email": email_norm,
@@ -71,8 +68,8 @@ def signup_account_results(
 @accounts_router.get("/pages/account/login", name="account_login_page")
 def account_login_page(request: Request) -> Response:
     return templates.TemplateResponse(
+        request,
         "auth/login/login.html",
-        {"request": request},
         status_code=status.HTTP_200_OK,
     )
 
@@ -89,8 +86,9 @@ def login(
 
     if not acc or not security.verify_password(password, acc.hashed_password) or not acc.is_active:
         return templates.TemplateResponse(
+            request,
             "auth/login/login_fail.html",
-            {"request": request, "username": user_norm}
+            {"username": user_norm}
         )
 
     token = security.create_access_token(sub=acc.email, extra={"id": acc.id, "role": str(acc.role)})
@@ -113,4 +111,3 @@ def logout_account(request: Request) -> Response:
     resp = RedirectResponse(url=str(login_url), status_code=status.HTTP_303_SEE_OTHER)
     resp.delete_cookie("access_token", path="/")
     return resp
-

@@ -1,5 +1,5 @@
 import pytest
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, StaticPool
 from sqlmodel import SQLModel, Session
 
 from src.database.account_repository import AccountsRepository
@@ -11,7 +11,6 @@ TEST_DB_URL = "sqlite:///:memory:"
 
 @pytest.fixture(autouse=True)
 def reset_db_core_singleton():
-    # Automatically reset DBCore._instance before and after each test.
     DBCore._instance = False
     yield
     DBCore._instance = False
@@ -19,13 +18,18 @@ def reset_db_core_singleton():
 
 @pytest.fixture
 def engine():
+
     engine = create_engine(
-        TEST_DB_URL,
+        "sqlite://",  # in-memory
         connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
     )
-    # create tables for all SQLModel models (including Account)
+    import src.models.account  # noqa: F401
+    import src.models.contact  # noqa: F401
+
     SQLModel.metadata.create_all(engine)
     return engine
+
 
 
 @pytest.fixture
@@ -45,3 +49,6 @@ def contact_repo(session):
     return ContactRepository(session=session)
 
 
+'''
+ py -m pytest --cov=src --cov-report=term-missing
+'''

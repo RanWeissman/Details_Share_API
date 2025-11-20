@@ -18,8 +18,8 @@ contacts_router = APIRouter(
 @contacts_router.get("/pages/contacts/create", name="contacts_create_page")
 def create_contact_page(request: Request) -> Response:
     return templates.TemplateResponse(
+        request,
         "contacts/add/contact_add.html",
-        {"request": request}
     )
 
 @contacts_router.post("/api/contacts/create", name="api_contacts_create")
@@ -51,9 +51,9 @@ def contacts_create(
         status_code = status.HTTP_201_CREATED
 
     return templates.TemplateResponse(
+        request,
         "contacts/add/contact_add_result.html",
         {
-            "request": request,
             "error": error,
             "name": name,
             "email": email_norm,
@@ -66,8 +66,8 @@ def contacts_create(
 @contacts_router.get("/pages/contacts/delete", name="contacts_delete_page")
 def delete_contact_page(request: Request) -> Response:
     return templates.TemplateResponse(
+        request,
         "contacts/delete/delete_contact.html",
-        {"request": request},
         status_code=status.HTTP_200_OK,
     )
 
@@ -89,8 +89,9 @@ def delete_contact(
     status_code = status.HTTP_200_OK if success else status.HTTP_404_NOT_FOUND
 
     return templates.TemplateResponse(
+        request,
         "contacts/delete/delete_result.html",
-        {"request": request, "success": success, "id": id_1},
+        {"success": success, "id": id_1},
         status_code=status_code,
     )
 
@@ -102,8 +103,9 @@ def get_all_contacts(
     contact_repo = ContactRepository(session)
     contacts = contact_repo.get_all()
     return templates.TemplateResponse(
+        request,
         "contacts/show_contacts.html",
-        {"request": request, "contacts": contacts},
+        {"contacts": contacts},
         status_code=status.HTTP_200_OK,
     )
 
@@ -128,24 +130,24 @@ def get_contacts_json(
 @contacts_router.get("/pages/filters/menu", name="filters_menu_page")
 def filter_page(request: Request) -> Response:
     return templates.TemplateResponse(
+        request,
         "contacts/filters/contacts_filter_page.html",
-        {"request": request},
         status_code=status.HTTP_200_OK,
     )
 
 @contacts_router.get("/pages/filters/age/above", name="filter_age_above_page")
 def contacts_above_page(request: Request) -> Response:
     return templates.TemplateResponse(
+        request,
         "contacts/filters/filter_contacts_age_above.html",
-        {"request": request},
         status_code=status.HTTP_200_OK,
     )
 
 @contacts_router.get("/pages/filters/age/between", name="filter_age_between_page")
 def contacts_between_page(request: Request) -> Response:
     return templates.TemplateResponse(
+        request,
         "contacts/filters/filter_contacts_age_between.html",
-        {"request": request},
         status_code=status.HTTP_200_OK,
     )
 
@@ -158,8 +160,9 @@ def contacts_above_show(
     contact_repo = ContactRepository(session)
     contacts = contact_repo.get_contacts_above_age(age)
     return templates.TemplateResponse(
+        request,
         "contacts/filters/contacts_filter_result.html",
-        {"request": request, "age": age, "contacts": contacts},
+        {"age": age, "contacts": contacts},
         status_code=status.HTTP_200_OK,
     )
 
@@ -173,8 +176,9 @@ def contacts_between_show(
     contact_repo = ContactRepository(session)
     contacts = contact_repo.get_contacts_between_age(min_age, max_age)
     return templates.TemplateResponse(
+        request,
         "contacts/filters/contacts_filter_result.html",
-        {"request": request, "min_age": min_age, "max_age": max_age, "contacts": contacts},
+        {"min_age": min_age, "max_age": max_age, "contacts": contacts},
         status_code=status.HTTP_200_OK,
     )
 
